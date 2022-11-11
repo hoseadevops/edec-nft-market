@@ -4,6 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
+    "doc": "yarn run hardhat docgen",
     "deploy1": "npx hardhat run scripts/deployMarketRegistry.js",
     "deploy2": "npx hardhat run scripts/deployMarketTokenTransferProxy.js",
     "deploy3": "npx hardhat run scripts/deployMarketExchange.js",
@@ -41,6 +42,7 @@
     "ethereumjs-util": "^7.1.5",
     "ethers": "^5.7.2",
     "hardhat": "^2.11.2",
+    "hardhat-docgen": "^1.3.0",
     "hardhat-gas-reporter": "^1.0.9",
     "pino": "^8.7.0",
     "solidity-coverage": "^0.8.2",
@@ -48,5 +50,8 @@
     "typechain": "^8.1.0",
     "typescript": "^4.8.4",
     "web3": "^1.8.0"
+  },
+  "dependencies": {
+    "solidity-docgen": "^0.6.0-beta.29"
   }
 }

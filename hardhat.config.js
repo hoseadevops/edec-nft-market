@@ -4,11 +4,17 @@ require("@nomicfoundation/hardhat-toolbox");
 require("@nomiclabs/hardhat-web3");
 require("@nomiclabs/hardhat-ethers");
 require("@nomiclabs/hardhat-etherscan");
+require('hardhat-docgen');
 
 require("dotenv").config();
 const { ALCHEMY_API_KEY, GOERLI_PRIVATE_KEY, ETHERSCAN_API_KEY, BSCSCAN_API_KEY } = process.env;
 
 module.exports = {
+    docgen: {
+        path: './documents',
+        clear: true,
+        runOnCompile: true,
+    },      
     solidity: {
         compilers: [
             {
