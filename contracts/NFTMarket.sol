@@ -1,7 +1,5 @@
-/**
- *Submitted for verification at Etherscan.io on 2022-02-01
-*/
 
+// SPDX-License-Identifier: MIT
 pragma solidity 0.4.26;
 
 library SafeMath {
@@ -1508,7 +1506,7 @@ contract Exchange is ExchangeCore {
 
 }
 
-contract WyvernExchangeWithBulkCancellations is Exchange {
+contract NFTMarket is Exchange {
     string public constant codename = "Bulk Smash";
 
     /**
