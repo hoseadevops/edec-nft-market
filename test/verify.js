@@ -58,7 +58,6 @@ describe("Verify", function () {
             encodeERC721ReplacementPatternBuy: encodeERC721ReplacementPatternBuy,
             encodeERC1155ReplacementPatternSell: encodeERC1155ReplacementPatternSell, 
             encodeERC1155ReplacementPatternBuy: encodeERC1155ReplacementPatternBuy
-
         });
         
         // 712 + 1272
@@ -67,6 +66,16 @@ describe("Verify", function () {
             toEthSignedMessageHash(TEST_MESSAGE),
             signature
         )).to.equal(true);
+
+        // 
+
+        const domainSeparator = await verify.deriveDomainSeparator(signer.address);
+
+        console.log(
+            {
+                domainSeparator
+            }
+        );
 
     });
 });

@@ -13,6 +13,7 @@
     "verify": "npx hardhat verify",
     "deploy:bsctest": "yarn run deploy1 --network bsctest && yarn run deploy2 --network bsctest && yarn run deploy3 --network bsctest && yarn run config --network bsctest",
     "deploy:goerli": "yarn run deploy1 --network goerli && yarn run deploy2 --network goerli && yarn run deploy3 --network goerli && yarn run config --network goerli",
+    "computeAddress": "npx hardhat run scripts/contractAddress.js",
     "echo": "echo '--- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---'",
     "compile": "npx hardhat compile",
     "deploy:mock": "npx hardhat run scripts/deployMock.js --network localhost",
@@ -49,7 +50,8 @@
     "ts-node": "^10.9.1",
     "typechain": "^8.1.0",
     "typescript": "^4.8.4",
-    "web3": "^1.8.0"
+    "web3": "^1.8.0",
+    "xdeployer": "^1.1.25"
   },
   "dependencies": {
     "solidity-docgen": "^0.6.0-beta.29"

@@ -5,6 +5,7 @@ require("@nomiclabs/hardhat-web3");
 require("@nomiclabs/hardhat-ethers");
 require("@nomiclabs/hardhat-etherscan");
 require('hardhat-docgen');
+require("xdeployer");
 
 require("dotenv").config();
 const { ALCHEMY_API_KEY, GOERLI_PRIVATE_KEY, ETHERSCAN_API_KEY, BSCSCAN_API_KEY } = process.env;
@@ -22,7 +23,7 @@ module.exports = {
                 settings: {
                     optimizer: {
                         enabled: true,
-                        runs: 1000000,
+                        runs: 200,
                     },
                 },
             },
@@ -44,6 +45,7 @@ module.exports = {
         },
         localhost : {
             allowUnlimitedContractSize: true,
+            gas: 30000000
         },
         goerli: {
           url: `https://eth-goerli.g.alchemy.com/v2/${ALCHEMY_API_KEY}`,
@@ -59,5 +61,5 @@ module.exports = {
     etherscan: {
         //apiKey: ETHERSCAN_API_KEY,
         apiKey: BSCSCAN_API_KEY
-      }
+    }
 };

@@ -99,6 +99,7 @@ async function getMockDeployed(config, signer) {
     }
 }
 
+
 /**  部署合约
  * 
  * @param {acount object} signer 
