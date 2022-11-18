@@ -99,101 +99,74 @@ const makeOrderWrap = (exchangeAddress, sender, nftAddress) => ({
     salt: SALT,                    // for collision
 })
 
-const hashOrder = (order) => {
-    return web3.utils.soliditySha3(
-      {type: 'address', value: order.exchange},
-      {type: 'address', value: order.maker},
-      {type: 'address', value: order.taker},
-      {type: 'uint', value: ethers.BigNumber.from(order.makerRelayerFee)},
-      {type: 'uint', value: ethers.BigNumber.from(order.takerRelayerFee)},
-      {type: 'uint', value: ethers.BigNumber.from(order.takerProtocolFee)},
-      {type: 'uint', value: ethers.BigNumber.from(order.takerProtocolFee)},
-      {type: 'address', value: order.feeRecipient},
-      {type: 'uint8', value: order.feeMethod},
-      {type: 'uint8', value: order.side},
-      {type: 'uint8', value: order.saleKind},
-      {type: 'address', value: order.target},
-      {type: 'uint8', value: order.howToCall},
-      {type: 'bytes', value: order.calldata ? order.calldata : order.calldataBeta},
-      {type: 'bytes', value: order.replacementPattern},
-      {type: 'address', value: order.staticTarget},
-      {type: 'bytes', value: order.staticExtradata},
-      {type: 'address', value: order.paymentToken},
-      {type: 'uint', value: ethers.BigNumber.from(order.basePrice)},
-      {type: 'uint', value: ethers.BigNumber.from(order.extra)},
-      {type: 'uint', value: ethers.BigNumber.from(order.listingTime)},
-      {type: 'uint', value: ethers.BigNumber.from(order.expirationTime)},
-      {type: 'uint', value: order.salt}
-    ).toString('hex')
-}
-
-const hashToSign = (order) => {
-    const packed = web3.utils.soliditySha3(
-      {type: 'address', value: order.exchange},
-      {type: 'address', value: order.maker},
-      {type: 'address', value: order.taker},
-      {type: 'uint', value: ethers.BigNumber.from(order.makerRelayerFee)},
-      {type: 'uint', value: ethers.BigNumber.from(order.takerRelayerFee)},
-      {type: 'uint', value: ethers.BigNumber.from(order.takerProtocolFee)},
-      {type: 'uint', value: ethers.BigNumber.from(order.takerProtocolFee)},
-      {type: 'address', value: order.feeRecipient},
-      {type: 'uint8', value: order.feeMethod},
-      {type: 'uint8', value: order.side},
-      {type: 'uint8', value: order.saleKind},
-      {type: 'address', value: order.target},
-      {type: 'uint8', value: order.howToCall},
-      {type: 'bytes', value: order.calldata ? order.calldata : order.calldataBeta},
-      {type: 'bytes', value: order.replacementPattern},
-      {type: 'address', value: order.staticTarget},
-      {type: 'bytes', value: order.staticExtradata},
-      {type: 'address', value: order.paymentToken},
-      {type: 'uint', value: ethers.BigNumber.from(order.basePrice)},
-      {type: 'uint', value: ethers.BigNumber.from(order.extra)},
-      {type: 'uint', value: ethers.BigNumber.from(order.listingTime)},
-      {type: 'uint', value: ethers.BigNumber.from(order.expirationTime)},
-      {type: 'uint', value: order.salt}
-    ).toString('hex')
-    return web3.utils.soliditySha3(
-      {type: 'string', value: '\x19Ethereum Signed Message:\n32'},
-      {type: 'bytes32', value: packed}
-    ).toString('hex')
-}
-
 /** sign
  * 
  * @param {签名数据} hash 
  * @param {签名用户} senderAddress 
  * @returns 
  */
-async function signature(order, sender) {
+async function signature(deployed, order, sender) {
     
-    const hash = hashOrder(order);
-    const hashSign = hashToSign(order);
+    const hash = await getHashOrder(deployed, order, sender);
+    const hashSign = await getHashSign(deployed, order, sender);
     const hashBytes = ethers.utils.arrayify(hash);
-    
-    // vrs = await ethers.utils.splitSignature(signature);
-    // vrs = splitSignature(signature)
-    // ...vrs
-    function splitSignature (signature) {
-        const raw = web3.utils.hexToBytes(signature);
-        switch (raw.length) {
-        case 64:
-            return [
-                web3.utils.bytesToHex(raw.slice(0, 32)), // r
-                web3.utils.bytesToHex(raw.slice(32, 64)), // vs
-            ];
-        case 65:
-            return [
-                raw[64], // v
-                web3.utils.bytesToHex(raw.slice(0, 32)), // r
-                web3.utils.bytesToHex(raw.slice(32, 64)), // s
-            ];
-        default:
-        expect.fail('Invalid signature length, cannot split');
-    }
-}
     // signMessage already add prefix
-    const signature = await sender.signMessage(hashBytes);
+    // const signature = await sender.signMessage(hashBytes);
+    
+    const domain = {
+        name: 'Core Sky Exchange Contract',
+        version: '1.0',
+        chainId: 1,
+        verifyingContract: deployed.exchange.address
+    };
+    const types = {
+        Order: [
+            {name: 'exchange', type: 'address'},
+            {name: 'maker', type: 'address'},
+            {name: 'taker', type: 'address'},
+            {name: 'makerRelayerFee', type: 'uint'},
+            {name: 'takerRelayerFee', type: 'uint'},
+            {name: 'makerProtocolFee', type: 'uint'},
+            {name: 'takerProtocolFee', type: 'uint'},
+            {name: 'feeRecipient', type: 'address'},
+            {name: 'feeMethod', type: 'uint8'},
+            {name: 'side', type: 'uint8'},
+            {name: 'saleKind', type: 'uint8'},
+            {name: 'target', type: 'address'},
+            {name: 'howToCall', type: 'uint8'},
+            {name: 'calldata', type: 'bytes'},
+            {name: 'replacementPattern', type: 'bytes'},
+            {name: 'staticTarget', type: 'address'},
+            {name: 'staticExtradata', type: 'bytes'},
+            {name: 'paymentToken', type: 'address'},
+            {name: 'basePrice', type: 'uint'},
+            {name: 'extra', type: 'uint'},
+            {name: 'listingTime', type: 'uint'},
+            {name: 'expirationTime', type: 'uint'},
+            {name: 'salt', type: 'uint'},
+            {name: 'nonce', type: 'uint'}
+        ]
+    }
+
+    const DOMAIN_SEPARATOR = await deployed.exchange.DOMAIN_SEPARATOR();
+
+    delete order['_sender'];
+    order['nonce'] = 1;
+
+    console.log({
+        order
+    });
+    const value = order;
+
+    console.log({
+        value
+    });
+
+    const signature = await sender._signTypedData(
+        domain,
+        types,
+        value
+    );
 
     const vrs = await ethers.utils.splitSignature(signature);
 
@@ -215,7 +188,7 @@ async function signature(order, sender) {
 //get hash order from contract
 async function getHashOrder(deployed, order, sender){
     return await deployed.exchange.connect(sender).hashOrder_(
-        [order.exchange, order.maker, order.taker, order.feeRecipient, order.target, order.staticTarget, order.paymentToken, sender.address],
+        [order.exchange, order.maker, order.taker, order.feeRecipient, order.target, order.staticTarget, order.paymentToken],
         [order.makerRelayerFee, order.takerRelayerFee, order.makerProtocolFee, order.takerProtocolFee, order.basePrice, order.extra, order.listingTime, order.expirationTime, order.salt],
         order.feeMethod,
         order.side,
@@ -230,7 +203,7 @@ async function getHashOrder(deployed, order, sender){
 //get hash order sign from contract
 async function getHashSign(deployed, order, sender){
     return await deployed.exchange.connect(sender).hashToSign_(
-        [order.exchange, order.maker, order.taker, order.feeRecipient, order.target, order.staticTarget, order.paymentToken, sender.address],
+        [order.exchange, order.maker, order.taker, order.feeRecipient, order.target, order.staticTarget, order.paymentToken],
         [order.makerRelayerFee, order.takerRelayerFee, order.makerProtocolFee, order.takerProtocolFee, order.basePrice, order.extra, order.listingTime, order.expirationTime, order.salt],
         order.feeMethod,
         order.side,
@@ -245,7 +218,7 @@ async function getHashSign(deployed, order, sender){
 // validate order parameters
 async function validateOrderParameters(deployed, order, sender){
     return await deployed.exchange.connect(sender).validateOrderParameters_(
-        [order.exchange, order.maker, order.taker, order.feeRecipient, order.target, order.staticTarget, order.paymentToken, sender.address],
+        [order.exchange, order.maker, order.taker, order.feeRecipient, order.target, order.staticTarget, order.paymentToken],
         [order.makerRelayerFee, order.takerRelayerFee, order.makerProtocolFee, order.takerProtocolFee, order.basePrice, order.extra, order.listingTime, order.expirationTime, order.salt],
         order.feeMethod,
         order.side,
@@ -260,10 +233,10 @@ async function validateOrderParameters(deployed, order, sender){
 // validate order
 async function validateOrder(deployed, order, sender){
     
-    let sig = await signature(order, sender);
+    let sig = await signature(deployed, order, sender);
 
     return await deployed.exchange.connect(sender).validateOrder_(
-        [order.exchange, order.maker, order.taker, order.feeRecipient, order.target, order.staticTarget, order.paymentToken, sender.address],
+        [order.exchange, order.maker, order.taker, order.feeRecipient, order.target, order.staticTarget, order.paymentToken],
         [order.makerRelayerFee, order.takerRelayerFee, order.makerProtocolFee, order.takerProtocolFee, order.basePrice, order.extra, order.listingTime, order.expirationTime, order.salt],
         order.feeMethod,
         order.side,
@@ -288,7 +261,7 @@ async function orderCalldataCanMatch(deployed, buy, sell, sender) {
 // order can match
 async function orderCanMatch(deployed, buy, sell, sender) {
     return await deployed.exchange.connect(sender).ordersCanMatch_(
-        [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken, sell.exchange, sell.maker, sell.taker, sell.feeRecipient, sell.target, sell.staticTarget, sell.paymentToken, sender.address],
+        [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken, sell.exchange, sell.maker, sell.taker, sell.feeRecipient, sell.target, sell.staticTarget, sell.paymentToken],
         [buy.makerRelayerFee, buy.takerRelayerFee, buy.makerProtocolFee, buy.takerProtocolFee, buy.basePrice, buy.extra, buy.listingTime, buy.expirationTime, buy.salt, sell.makerRelayerFee, sell.takerRelayerFee, sell.makerProtocolFee, sell.takerProtocolFee, sell.basePrice, sell.extra, sell.listingTime, sell.expirationTime, sell.salt],
         [buy.feeMethod, buy.side, buy.saleKind, buy.howToCall, sell.feeMethod, sell.side, sell.saleKind, sell.howToCall],
         buy.calldata,
@@ -303,8 +276,8 @@ async function orderCanMatch(deployed, buy, sell, sender) {
 // call atomicMatch 
 async function atomicMatch(deployed, buy, sell, buyyer, seller, sender, override){
 
-    let sigBuyy = await signature(buy, buyyer);
-    let sigSell = await signature(sell, seller);
+    let sigBuyy = await signature(deployed, buy, buyyer);
+    let sigSell = await signature(deployed, sell, seller);
 
     const tx =  await deployed.exchange.connect(sender).atomicMatch_(
         [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken, sell.exchange, sell.maker, sell.taker, sell.feeRecipient, sell.target, sell.staticTarget, sell.paymentToken, sender.address],
@@ -347,7 +320,6 @@ async function atomicMatch(deployed, buy, sell, buyyer, seller, sender, override
     const is_orderCalldataCanMatch        = await orderCalldataCanMatch(deployed, buy, sell, sender);
 
     console.log({
-        "matchOrder": "require",
         is_validateOrderParameters_buy,
         is_validateOrderParameters_sell,
         is_validateOrder_buy,
@@ -518,8 +490,6 @@ module.exports = {
     buyERC721ABI,
 
     makeOrder,
-    hashOrder,
-    hashToSign,
     signature,
     getHashOrder,
     getHashSign,

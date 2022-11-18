@@ -16,8 +16,6 @@ const {
     buyERC721ABI,
 
     makeOrder,
-    hashOrder,
-    hashToSign,
     signature,
     getHashOrder,
     getHashSign,
