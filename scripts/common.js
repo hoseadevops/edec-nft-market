@@ -73,32 +73,6 @@ const makeOrder = (exchangeAddress, sender, nftAddress) => ({
     _sender: sender.address        // for wrap【不计算 hash 】
 })
 
-const makeOrderWrap = (exchangeAddress, sender, nftAddress) => ({
-    exchange: exchangeAddress,     // 当前 exhcnage 合约地址 default : exchangeAddress
-    maker: sender.address,         // 订单创建者 default sender 
-    taker: ZERO_ADDRESS,           // 订单参与者 require
-    makerRelayerFee: 250,          // 手续费  default: 0
-    takerRelayerFee: 0,            // 手续费  default: 0
-    makerProtocolFee: 0,           // 协议费  default: 0
-    takerProtocolFee: 0,           // 协议费  default: 0
-    feeRecipient: ZERO_ADDRESS,    // 平台费 接收账户 default: 0x0
-    feeMethod: 0,                  // enum FeeMethod { ProtocolFee, SplitFee }  费用收取方法：只用支付协议费，或者 是需要同时支付协议费 和 平台费
-    side: 0,                       // enum Side { Buy, Sell } 该订单是 卖方单 还是 买方单 
-    saleKind: 0,                   // { FixedPrice, DutchAuction } 销售方式是 固定价格，还是采用 竞拍的方式
-    target: nftAddress,            // 交易的 nft 完成 NFT 转移
-    howToCall: 0,                  // 调用方式是 call 还是 delegatecall
-    calldataBeta: '0x',            // target 执行时的 calldata
-    replacementPattern: '0x',      // target 执行时的 calldata 可替换的参数
-    staticTarget: ZERO_ADDRESS,    // 静态调用（不修改状态）的 target 账户地址；为 0 表示没有这种调用
-    staticExtradata: '0x',         // 静态调用时设置的额外数据，最终交给 staticTarget 处理
-    paymentToken: ZERO_ADDRESS,    // 该地址为 0 ，表示使用 ether 支付，否则，表示使用一个 erc20 token 支付
-    basePrice: ZERO,               // 如果是 saleKind 固定价格，则该值就表示固定价格；否则，真正的价格，还包括 extra 部分. 价格单位为 Wei
-    extra: 0,                      // 竞拍方式下，extra 表示需要额外的最大值. 价格单位为 Wei
-    listingTime: 0,                // 挂单时间
-    expirationTime: 0,             // 订单过期失效时间
-    salt: SALT,                    // for collision
-})
-
 function getEIP712TypedData(orderStr, eip712Domain, nonce) {
     const order = JSON.parse(orderStr);
     return {
@@ -361,22 +335,13 @@ async function makeMatchOrder(deployed, param, warp) {
     const latestTime = await helpers.time.latest();
     const oneDayBefore  = latestTime - 3600 * 24;
 
-    // sell --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- 
-    if(warp){
-        sellOrder = makeOrderWrap(deployed.exchange.address, param.seller, param.nft.address);
-    }else{
-        sellOrder = makeOrder(deployed.exchange.address, param.seller, param.nft.address);
-    }
+    sellOrder = makeOrder(deployed.exchange.address, param.seller, param.nft.address);
+    
     sellOrder.taker = ZERO_ADDRESS;
     sellOrder.side = 1;
     
-
-    // buy --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- 
-    if(warp){
-        buyyOrder = makeOrderWrap(deployed.exchange.address, param.buyer, param.nft.address);
-    }else{
-        buyyOrder = makeOrder(deployed.exchange.address, param.buyer, param.nft.address);
-    }
+    buyyOrder = makeOrder(deployed.exchange.address, param.buyer, param.nft.address);
+    
     buyyOrder.taker = sellOrder.maker;
     buyyOrder.side = 0;
     
@@ -398,23 +363,15 @@ async function makeMatchOrder(deployed, param, warp) {
 
     // calldata
     if(param.kind == "ERC721") {
-        if(warp){
-            sellOrder.calldataBeta = sellERC721ABI(param.seller.address, param.item);
-            buyyOrder.calldataBeta = buyERC721ABI(param.buyer.address, param.item);
-        }else{
-            sellOrder.calldata = sellERC721ABI(param.seller.address, param.item);
-            buyyOrder.calldata = buyERC721ABI(param.buyer.address, param.item);
-        }
+        sellOrder.calldata = sellERC721ABI(param.seller.address, param.item);
+        buyyOrder.calldata = buyERC721ABI(param.buyer.address, param.item);
+        
         sellOrder.replacementPattern = encodeERC721ReplacementPatternSell;
         buyyOrder.replacementPattern = encodeERC721ReplacementPatternBuy;
     }else{
-        if(warp){
-            sellOrder.calldataBeta = sellERC1155ABI(param.seller.address, param.item, param.value);
-            buyyOrder.calldataBeta = buyERC1155ABI(param.buyer.address, param.item, param.value);
-        }else{
-            sellOrder.calldata = sellERC1155ABI(param.seller.address, param.item, param.value);
-            buyyOrder.calldata = buyERC1155ABI(param.buyer.address, param.item, param.value);
-        }
+        sellOrder.calldata = sellERC1155ABI(param.seller.address, param.item, param.value);
+        buyyOrder.calldata = buyERC1155ABI(param.buyer.address, param.item, param.value);
+        
         sellOrder.replacementPattern = encodeERC1155ReplacementPatternSell;
         buyyOrder.replacementPattern = encodeERC1155ReplacementPatternBuy;
     }

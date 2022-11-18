@@ -71,6 +71,23 @@ async function _makeMatchOrder(deployed, mockDeployed, seller, buyer, seller_ass
     }
 }
 
+function changeKey(obj, old_key, new_key){
+    Object.keys(obj).forEach(key => {
+        if (key === old_key) {
+            obj[new_key] = obj[key];
+            delete obj[key];
+        } else {
+            obj[`_${key}`] = obj[key];
+            delete obj[key];
+    
+            obj[`${key}`] = obj[`_${key}`];
+            delete obj[`_${key}`];
+        }
+    });
+
+    return obj;
+}
+
 async function matchOrder(deployed, mockDeployed, accounts, accountsAssets)
 {
     const [rock, hosea, yety, suky, join, bob] = accounts;
@@ -94,6 +111,11 @@ async function matchOrder(deployed, mockDeployed, accounts, accountsAssets)
 
     let sigSell1 = await signature(deployed, matchOrder1.sell, rock);
     let sigSell2 = await signature(deployed, matchOrder2.sell, rock);
+
+    matchOrder1.buy = changeKey(matchOrder1.buy, 'calldata', 'calldataBeta');
+    matchOrder2.buy = changeKey(matchOrder2.buy, 'calldata', 'calldataBeta');
+    matchOrder1.sell = changeKey(matchOrder1.sell, 'calldata', 'calldataBeta');
+    matchOrder2.sell = changeKey(matchOrder2.sell, 'calldata', 'calldataBeta');
 
     buys    = [matchOrder1.buy, matchOrder2.buy];
     buySigs = [
