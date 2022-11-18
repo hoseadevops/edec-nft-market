@@ -89,11 +89,11 @@ async function matchOrder(deployed, mockDeployed, accounts, accountsAssets)
     scheme1 = match1.scheme;
     scheme2 = match2.scheme;
 
-    let sigBuy1 = await signature(matchOrder1.buy, hosea);
-    let sigBuy2 = await signature(matchOrder2.buy, hosea);
+    let sigBuy1 = await signature(deployed, matchOrder1.buy, hosea);
+    let sigBuy2 = await signature(deployed, matchOrder2.buy, hosea);
 
-    let sigSell1 = await signature(matchOrder1.sell, rock);
-    let sigSell2 = await signature(matchOrder2.sell, rock);
+    let sigSell1 = await signature(deployed, matchOrder1.sell, rock);
+    let sigSell2 = await signature(deployed, matchOrder2.sell, rock);
 
     buys    = [matchOrder1.buy, matchOrder2.buy];
     buySigs = [
@@ -108,7 +108,6 @@ async function matchOrder(deployed, mockDeployed, accounts, accountsAssets)
     ];
 
     console.log({
-        "run here":'debug',
         buys,
         buySigs,
         sells,

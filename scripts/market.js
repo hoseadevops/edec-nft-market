@@ -88,7 +88,7 @@ async function match721Order(deployed, mockDeployed, accounts, accountsAssets)
         gasLimit: 4100000
     };
 
-    // await atomicMatch(deployed, orders.buy, orders.sell, hosea, rock, hosea, override);
+    await atomicMatch(deployed, orders.buy, orders.sell, hosea, rock, hosea, override);
 
     await result(scheme);
 }
@@ -180,7 +180,7 @@ async function main() {
     // submit orders
     await match721Order(deployed, mockDeployed, accounts, accountsAssets);
     
-    // await match1155Order(deployed, mockDeployed, accounts, accountsAssets);
+    await match1155Order(deployed, mockDeployed, accounts, accountsAssets);
 }
 
 main()

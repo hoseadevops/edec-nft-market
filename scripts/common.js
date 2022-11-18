@@ -99,73 +99,90 @@ const makeOrderWrap = (exchangeAddress, sender, nftAddress) => ({
     salt: SALT,                    // for collision
 })
 
+function getEIP712TypedData(orderStr, eip712Domain, nonce) {
+    const order = JSON.parse(orderStr);
+    return {
+        types: {
+            Order: [
+                {type: 'address', name: 'exchange'},
+                {type: 'address', name: 'maker'},
+                {type: 'address', name: 'taker'},
+                {type: 'uint256', name: 'makerRelayerFee'},
+                {type: 'uint256', name: 'takerRelayerFee'},
+                {type: 'uint256', name: 'makerProtocolFee'},
+                {type: 'uint256', name: 'takerProtocolFee'},
+                {type: 'address', name: 'feeRecipient'},
+                {type: 'uint8', name: 'feeMethod'},
+                {type: 'uint8', name: 'side'},
+                {type: 'uint8', name: 'saleKind'},
+                {type: 'address', name: 'target'},
+                {type: 'uint8', name: 'howToCall'},
+                {type: 'bytes', name: 'calldata'},
+                {type: 'bytes', name: 'replacementPattern'},
+                {type: 'address', name: 'staticTarget'},
+                {type: 'bytes', name: 'staticExtradata'},
+                {type: 'address', name: 'paymentToken'},
+                {type: 'uint256', name: 'basePrice'},
+                {type: 'uint256', name: 'extra'},
+                {type: 'uint256', name: 'listingTime'},
+                {type: 'uint256', name: 'expirationTime'},
+                {type: 'uint256', name: 'salt'},
+                {type: 'uint256', name: 'nonce'}
+            ]
+        },
+        domain: eip712Domain,
+        primaryType: 'Order',
+        message: {
+            exchange: order.exchange,
+            maker: order.maker,
+            taker: order.taker,
+            makerRelayerFee: order.makerRelayerFee,
+            takerRelayerFee: order.takerRelayerFee,
+            makerProtocolFee: order.makerProtocolFee,
+            takerProtocolFee: order.takerProtocolFee,
+            feeRecipient: order.feeRecipient,
+            feeMethod: Number(order.feeMethod),
+            side: Number(order.side),
+            saleKind: Number(order.saleKind),
+            target: order.target,
+            howToCall: Number(order.howToCall),
+            calldata: order.calldata,
+            replacementPattern: order.replacementPattern,
+            staticTarget: order.staticTarget,
+            staticExtradata: order.staticExtradata,
+            paymentToken: order.paymentToken,
+            basePrice: order.basePrice,
+            extra: order.extra,
+            listingTime: order.listingTime,
+            expirationTime: order.expirationTime,
+            salt: order.salt,
+            nonce
+        }
+    }
+}
 /** sign
  * 
  * @param {签名数据} hash 
  * @param {签名用户} senderAddress 
  * @returns 
  */
-async function signature(deployed, order, sender) {
-    
-    const hash = await getHashOrder(deployed, order, sender);
-    const hashSign = await getHashSign(deployed, order, sender);
-    const hashBytes = ethers.utils.arrayify(hash);
-    // signMessage already add prefix
-    // const signature = await sender.signMessage(hashBytes);
-    
-    const domain = {
+async function signature(deployed, order, sender) {    
+    const eip712Domain = {
         name: 'Core Sky Exchange Contract',
         version: '1.0',
         chainId: 1,
-        verifyingContract: deployed.exchange.address
+        verifyingContract: deployed.exchange.address,
     };
-    const types = {
-        Order: [
-            {name: 'exchange', type: 'address'},
-            {name: 'maker', type: 'address'},
-            {name: 'taker', type: 'address'},
-            {name: 'makerRelayerFee', type: 'uint'},
-            {name: 'takerRelayerFee', type: 'uint'},
-            {name: 'makerProtocolFee', type: 'uint'},
-            {name: 'takerProtocolFee', type: 'uint'},
-            {name: 'feeRecipient', type: 'address'},
-            {name: 'feeMethod', type: 'uint8'},
-            {name: 'side', type: 'uint8'},
-            {name: 'saleKind', type: 'uint8'},
-            {name: 'target', type: 'address'},
-            {name: 'howToCall', type: 'uint8'},
-            {name: 'calldata', type: 'bytes'},
-            {name: 'replacementPattern', type: 'bytes'},
-            {name: 'staticTarget', type: 'address'},
-            {name: 'staticExtradata', type: 'bytes'},
-            {name: 'paymentToken', type: 'address'},
-            {name: 'basePrice', type: 'uint'},
-            {name: 'extra', type: 'uint'},
-            {name: 'listingTime', type: 'uint'},
-            {name: 'expirationTime', type: 'uint'},
-            {name: 'salt', type: 'uint'},
-            {name: 'nonce', type: 'uint'}
-        ]
-    }
+    const nonces = await deployed.exchange.nonces(sender.address);
+    const nonce = nonces.toString();
 
-    const DOMAIN_SEPARATOR = await deployed.exchange.DOMAIN_SEPARATOR();
+    const typedData = getEIP712TypedData(JSON.stringify(order), eip712Domain, Number(nonce))
 
-    delete order['_sender'];
-    order['nonce'] = 1;
-
-    console.log({
-        order
-    });
-    const value = order;
-
-    console.log({
-        value
-    });
 
     const signature = await sender._signTypedData(
-        domain,
-        types,
-        value
+        typedData.domain,
+        typedData.types,
+        typedData.message
     );
 
     const vrs = await ethers.utils.splitSignature(signature);
@@ -176,11 +193,13 @@ async function signature(deployed, order, sender) {
         s : vrs.s,
         r : vrs.r
     }
-    // testing 
-    addr1 = ethers.utils.recoverAddress(hashSign, { r: sig.r, s: sig.s, v: sig.v });
-    addr2 = ethers.utils.recoverAddress(hashSign, sig.signature);
-    addr3 = await ethers.utils.verifyMessage(hashBytes, sig.signature);
-    console.log("sign-address-verfiy:", sender.address, addr1, addr2, addr3);
+    // // testing 
+    let verifiedAddress = ethers.utils.verifyTypedData(typedData.domain, typedData.types, typedData.message, signature)
+
+    console.log({
+        "sender": sender.address,
+        verifiedAddress
+    });
 
     return sig;
 }
@@ -234,7 +253,7 @@ async function validateOrderParameters(deployed, order, sender){
 async function validateOrder(deployed, order, sender){
     
     let sig = await signature(deployed, order, sender);
-
+    
     return await deployed.exchange.connect(sender).validateOrder_(
         [order.exchange, order.maker, order.taker, order.feeRecipient, order.target, order.staticTarget, order.paymentToken],
         [order.makerRelayerFee, order.takerRelayerFee, order.makerProtocolFee, order.takerProtocolFee, order.basePrice, order.extra, order.listingTime, order.expirationTime, order.salt],
