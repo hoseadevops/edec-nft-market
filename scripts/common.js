@@ -18,17 +18,63 @@ const kind = {
 const FEE_ADDRESS  = "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955";
 const contract_ABI = [
     "function transferFrom(address from, address to, uint256 tokenId)",
-    "function safeTransferFrom(address _from, address _to, uint256 _id, uint256 _value, bytes calldata _data)"
+    "function safeTransferFrom(address _from, address _to, uint256 _id, uint256 _value, bytes calldata _data)",
+    "function atomicize(address[] calldata addrs, uint256[] calldata values, uint256[] calldata calldataLengths, bytes calldata calldatas)"
 ];
 let iface = new ethers.utils.Interface(contract_ABI);
 
 // get 721 sell calldata
-function sellERC721ABI( seller, id) {
-    return iface.encodeFunctionData("transferFrom", [seller, ZERO_ADDRESS, id]);
+function sellERC721ABI( seller, id, to) {
+    if(!to) {
+        to = ZERO_ADDRESS;
+    }
+    return iface.encodeFunctionData("transferFrom", [seller, to, id]);
 }
+const transactions = [
+    {calldata: '0x', value: web3.utils.toWei('1'), token: '0x0084a81668b9a978416abeb88bc1572816cc7cac', id: 1, maker: '0x0084a81668b9a978416abeb88bc1572816cc7cac', taker:'0x0084a81668b9a978416abeb88bc1572816cc7cac'},
+    {calldata: '0x', value: web3.utils.toWei('1'), token: '0xa839D4b5A36265795EbA6894651a8aF3d0aE2e68', id: 2, maker: '0x0084a81668b9a978416abeb88bc1572816cc7cac', taker:'0x0084a81668b9a978416abeb88bc1572816cc7cac'}
+]
+
+function sellBatchERC721ABI(transactions) {
+    const sell = [
+        transactions.map(t => t.token),
+        transactions.map(t => t.value),
+        transactions.map(t => {
+            t.calldata = sellERC721ABI(t.maker, t.id, t.taker);
+            return (t.calldata.length - 2) / 2;
+        }),
+       transactions.map(t => t.calldata).reduce((x, y) => x + y.slice(2))
+    ]
+    const buy = [
+        transactions.map(t => t.token),
+        transactions.map(t => t.value),
+        transactions.map(t => {
+            t.calldata = sellERC721ABI(t.taker, t.id, t.maker);
+            return (t.calldata.length - 2) / 2;
+        }),
+       transactions.map(t => t.calldata).reduce((x, y) => x + y.slice(2))
+    ]
+
+    console.log({
+        "sellBatchERC721ABI" : "debug",
+        sell, 
+        buy
+    });
+
+    const sellCalldata = iface.encodeFunctionData("atomicize", ...sell);
+    const buyCalldata = iface.encodeFunctionData("atomicize", ...buy);
+    return {
+        sellCalldata,
+        buyCalldata
+    }
+}
+
 // get 721 buy calldata
-function buyERC721ABI( buyer, id ) { 
-    return iface.encodeFunctionData("transferFrom", [ZERO_ADDRESS, buyer, id]);
+function buyERC721ABI( buyer, id , from) { 
+    if(!from){
+        from = ZERO_ADDRESS;
+    }
+    return iface.encodeFunctionData("transferFrom", [from, buyer, id]);
 }
 // --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 // get 1155 sell calldata
@@ -39,7 +85,7 @@ function sellERC1155ABI( seller, id, value) {
 function buyERC1155ABI( buyer, id, value, ) {
     return iface.encodeFunctionData("safeTransferFrom", [ZERO_ADDRESS, buyer, id, value, '0x']);
 }
-
+// --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 /** default order
  * @param { exchange contract address} exchange 
  * @param { maker } sender 
@@ -140,7 +186,7 @@ function getEIP712TypedData(orderStr, eip712Domain, nonce) {
  * @param {签名用户} senderAddress 
  * @returns 
  */
-async function signature(deployed, order, sender) {    
+async function signature(deployed, order, sender) {
     const eip712Domain = {
         name: 'Core Sky Exchange Contract',
         version: '1.0',
