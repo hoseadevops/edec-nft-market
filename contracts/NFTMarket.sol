@@ -528,6 +528,17 @@ contract ExchangeCore is ReentrancyGuarded, Ownable {
     }
     
     /**
+     * @dev Change The token used to pay exchange fees (owner only)
+     * @param newExchangeToken New exchangeToken
+     */
+    function changeExchangeToken(ERC20 newExchangeToken)
+        public
+        onlyOwner
+    {
+        exchangeToken = newExchangeToken;
+    }
+
+    /**
      * @dev Change exchangeWrap (owner only)
      * @param _exchangeWrap New exchangeWrap
      */

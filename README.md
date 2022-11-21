@@ -7,29 +7,36 @@
 > 整体架构、订单实体、用户注册代理钱包、签名、calldata、replacementPattern 生成等 参考文档和测试用例
  
 ```
+# install dependency
 yarn
 
-# ABI 在 artifacts中
-yarn run compile
-
-# support MetaMask、Dapp front-end
-# 合约内已用 import "hardhat/console.sol" 进行充分打点 
+# ------------------ ------------------ ------------------ 
+# localhost
+# run localhost node, support MetaMask、dapp front-end 合约内已用 import "hardhat/console.sol" 进行充分打点 
 npx hardhat node
 
-# 部署合约存储在 *.deployed.json中
-rm -rf ./31337.contract.deployed.json && yarn run reset
+# 部署合约存储在 : {networkId}.contract.deployed.json 中
+yarn env:localhost
 
 # ERC721 && ERC1155 测试
-yarn run test:market
+yarn test:market
 
 # ERC721批量 测试
-yarn run test:market:wrap
-
-# 合约接口文档
-open documents/index.html
+yarn test:market:wrap
 
 # 签名 && calldata 测试
 npx hardhat test
+# ------------------ ------------------ ------------------ 
+
+# goerli
+手续费 ERC20 token  可自己调用 faucet 方法 获取 token
+https://goerli.etherscan.io/address/0x116891e4824f3a1e95bd5f39badb4c907dc56592#code
+
+# deploy to goerli
+yarn run deploy:goerli
+
+# ------------------ ------------------ ------------------ 
+
 ```
 
 ### 文档

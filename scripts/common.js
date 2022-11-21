@@ -14,8 +14,9 @@ const kind = {
     "ERC721": "ERC721",
     "ERC1155": "ERC1155"
 };
-// feeer
-const FEE_ADDRESS  = "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955";
+// feeer EOA if an contract  must can reciver eth.
+const FEE_RECIPIENT = "0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199";
+
 const contract_ABI = [
     "function transferFrom(address from, address to, uint256 tokenId)",
     "function safeTransferFrom(address _from, address _to, uint256 _id, uint256 _value, bytes calldata _data)",
@@ -25,7 +26,7 @@ const contract_ABI = [
 let iface = new ethers.utils.Interface(contract_ABI);
 
 // get 721 sell calldata
-function sellERC721ABI( seller, id, to) {
+function sellERC721ABI(seller, id, to) {
     if(!to) {
         to = ZERO_ADDRESS;
     }
@@ -401,7 +402,7 @@ async function makeMatchOrder(deployed, param, warp) {
     sellOrder.expirationTime = buyyOrder.expirationTime = 0;
 
     // 互斥 根据该字段 判断最终结算价格
-    sellOrder.feeRecipient = FEE_ADDRESS;
+    sellOrder.feeRecipient = FEE_RECIPIENT;
     buyyOrder.feeRecipient = ZERO_ADDRESS;
 
     // calldata
@@ -469,8 +470,8 @@ async function result(scheme) {
         callBalanceOfSell =  await scheme.nft.balanceOf(scheme.seller.address, scheme.item);
         callBalanceOfBuy =  await scheme.nft.balanceOf(scheme.buyer.address, scheme.item);
     }
-
-    const fee_balance = await ethers.provider.getBalance(FEE_ADDRESS);
+    
+    const fee_balance = await ethers.provider.getBalance(FEE_RECIPIENT);
     const zero_balance = await ethers.provider.getBalance(ZERO_ADDRESS);
     
     const seller_balance = await ethers.provider.getBalance(scheme.seller.address);
@@ -503,7 +504,6 @@ module.exports = {
     ZERO,
     SALT,
     kind,
-    FEE_ADDRESS,
 
     sellERC721ABI,
     buyERC721ABI,

@@ -10,7 +10,6 @@ const {
     ZERO,
     SALT,
     kind,
-    FEE_ADDRESS,
 
     sellERC721ABI,
     buyERC721ABI,

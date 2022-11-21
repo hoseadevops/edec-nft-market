@@ -1,4 +1,5 @@
 const {getConfig, gasCalculate} = require('./library.js');
+const hre = require('hardhat');
 
 async function main() {
     
@@ -47,8 +48,21 @@ async function main() {
         await tx2.wait();
         getExchangeWrap = await marketExchange.exchangeWrap();
         console.log(`set ExchangeWrap done as ${getExchangeWrap}`);
+
     }else{
         console.log("grantInitialAuthentication already!");
+    }
+    
+    const networkName = hre.network.name;
+    if( networkName == "localhost") {
+        if(configed.ERC20Mock_USDT === undefined) {
+            throw new Error("deploy ERC20Mock_USDT first");
+        }
+        // change ExchangeToken
+        const tx3 = await marketExchange.changeExchangeToken(configed.ERC20Mock_USDT);
+        await tx3.wait();
+        getExchangeToken = await marketExchange.exchangeToken();
+        console.log(`set exchangeToken done as ${getExchangeToken}`);
     }
 }
 

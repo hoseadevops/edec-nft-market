@@ -1,13 +1,12 @@
 const fs = require('fs');
-
+const hre = require('hardhat');
 /** 获取配置 文件名称
  * @returns '${chainId}.contract.deployed.json'
  */
 async function getConfigFile() {
-    const [signer] = await ethers.getSigners();
-    const suffix = ".contract.deployed.json"
-    const chainID = await signer.getChainId();
-    return chainID + suffix;
+    const networkName = hre.network.name;
+    const suffix = ".deployed.json"
+    return networkName + suffix;
 }
 
 /** 读配置 （没有则创建配置文件）
@@ -131,7 +130,8 @@ async function deploy(signer, contract, tag, ...arg ) {
     const instance = await Contract.deploy(...arg);
     
     // verify
-    console.log(`yarn run verify --network bsctest ${instance.address} ${arg.join(" ")}`);
+    const networkName = hre.network.name;
+    console.log(`yarn run verify --network ${networkName} ${instance.address} ${arg.join(" ")}`);
 
     // log
     delete instance.deployTransaction['data'];

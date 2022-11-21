@@ -4,13 +4,13 @@ require("dotenv").config();
 
 const { FEE_TOKEN, PROTOCAL_FEE_ADDRESS } = process.env;
 
+
 async function main() {
 
     let configed = await getConfig();
     if(configed.MarketRegistry === undefined || configed.MarketTokenTransferProxy === undefined) {
         throw new Error(`deploy MarketRegistry or MarketTokenTransferProxy first`);
     }
-
     const [exchangeOwner] = await ethers.getSigners();
     console.log("-----------------------------------------------------------");
     console.log("Deploying contracts with the account:", exchangeOwner.address);
