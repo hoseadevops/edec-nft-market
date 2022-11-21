@@ -239,11 +239,11 @@ async function main() {
     const accountsAssets = getMockTokenAsset(accounts);
     
     // submit orders
-    // await match721Order(deployed, mockDeployed, accounts, accountsAssets);
+    await match721Order(deployed, mockDeployed, accounts, accountsAssets);
     
-    // await match1155Order(deployed, mockDeployed, accounts, accountsAssets);
+    await match1155Order(deployed, mockDeployed, accounts, accountsAssets);
 
-    await match721BatchOrder(deployed, mockDeployed, accounts, accountsAssets);
+    // await match721BatchOrder(deployed, mockDeployed, accounts, accountsAssets);
 }
 
 main()
