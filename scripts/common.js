@@ -19,6 +19,7 @@ const FEE_ADDRESS  = "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955";
 const contract_ABI = [
     "function transferFrom(address from, address to, uint256 tokenId)",
     "function safeTransferFrom(address _from, address _to, uint256 _id, uint256 _value, bytes calldata _data)",
+    "function safeBatchTransferFrom(address from, address to, uint256[] calldata ids, uint256[] calldata amounts, bytes calldata data)",
     "function atomicize(address[] calldata addrs, uint256[] calldata values, uint256[] calldata calldataLengths, bytes calldata calldatas)"
 ];
 let iface = new ethers.utils.Interface(contract_ABI);
@@ -30,10 +31,6 @@ function sellERC721ABI( seller, id, to) {
     }
     return iface.encodeFunctionData("transferFrom", [seller, to, id]);
 }
-const transactions = [
-    {calldata: '0x', value: web3.utils.toWei('1'), token: '0x0084a81668b9a978416abeb88bc1572816cc7cac', id: 1, maker: '0x0084a81668b9a978416abeb88bc1572816cc7cac', taker:'0x0084a81668b9a978416abeb88bc1572816cc7cac'},
-    {calldata: '0x', value: web3.utils.toWei('1'), token: '0xa839D4b5A36265795EbA6894651a8aF3d0aE2e68', id: 2, maker: '0x0084a81668b9a978416abeb88bc1572816cc7cac', taker:'0x0084a81668b9a978416abeb88bc1572816cc7cac'}
-]
 
 function sellBatchERC721ABI(transactions) {
     const sell = [

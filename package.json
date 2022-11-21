@@ -51,7 +51,9 @@
     "typechain": "^8.1.0",
     "typescript": "^4.8.4",
     "web3": "^1.8.0",
-    "xdeployer": "^1.1.25"
+    "xdeployer": "^1.1.25",
+    "wyvern-js": "git+https://github.com/ProjectOpenSea/wyvern-js.git#7429b1f2dd123f012cae1f3144a069e91ecd0682",
+    "wyvern-schemas": "git+https://github.com/ProjectOpenSea/wyvern-schemas.git#af1fc62dd58144b60487df690c77dcf8daa45669"
   },
   "dependencies": {
     "solidity-docgen": "^0.6.0-beta.29"
