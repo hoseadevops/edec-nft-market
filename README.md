@@ -1,7 +1,7 @@
 # NFT market contract
 
 > 匹配订单 从买/卖双方订单开始。卖方创建销售订单，以固定价格或者竞拍的方式，将 NFT挂出去; 买方创建购买订单，并将卖方创建的销售订单一起，发给交易合约 Exchange Contract。交易合约将对订单校验，校验通过后，完成转移：
-* 支付费用转移
+* 执行转账和支付各项手续费
 * NFT产品转移
 
 > 整体架构、订单实体、用户注册代理钱包、签名、calldata、replacementPattern 生成等 参考文档和测试用例
@@ -71,6 +71,11 @@ yarn run deploy:goerli
 
 > 最终价格 - 价格计算
 
+```
+# 图中勘误（对于拍卖）：
+/* Sell-side - start price: basePrice. End price: basePrice - extra. */
+/* Buye-side - start price: basePrice. End price: basePrice + extra. */
+```
 ![image](docs/images/wyvern-exchange-order-price.png)
 
 > 最终价格

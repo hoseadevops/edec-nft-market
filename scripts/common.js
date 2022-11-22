@@ -33,7 +33,7 @@ function sellERC721ABI(seller, id, to) {
     return iface.encodeFunctionData("transferFrom", [seller, to, id]);
 }
 
-function sellBatchERC721ABI(transactions) {
+function batchERC721ABI(transactions) {
     const sell = [
         transactions.map(t => t.token),
         transactions.map(t => t.value),
@@ -54,7 +54,7 @@ function sellBatchERC721ABI(transactions) {
     ]
 
     console.log({
-        "sellBatchERC721ABI" : "debug",
+        "batchERC721ABI" : "debug",
         sell, 
         buy
     });

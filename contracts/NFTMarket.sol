@@ -954,7 +954,7 @@ contract ExchangeCore is ReentrancyGuarded, Ownable {
     {
         /* Only payable in the special case of unwrapped Ether. */
         if (sell.paymentToken != address(0)) {
-            require(msg.value == 0, "must send ETH.");
+            require(msg.value == 0, "Do not send ETH.");
         }
 
         /* Calculate match price. */
