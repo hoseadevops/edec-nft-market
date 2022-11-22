@@ -156,7 +156,7 @@ async function match1155Order(deployed, mockDeployed, accounts, accountsAssets)
     await result(scheme);
 }
 
-async function match721BatchOrder(deployed, mockDeployed, accounts, accountsAssets)
+async function match721OrderToERC20(deployed, mockDeployed, accounts, accountsAssets)
 {
     const [rock, hosea, yety, suky, join, bob] = accounts;
     const [rock_asset, hosea_asset, yety_asset, suky_asset, join_asset, bob_asset] = accountsAssets;
@@ -175,11 +175,11 @@ async function match721BatchOrder(deployed, mockDeployed, accounts, accountsAsse
     };
     const scheme = scheme_nft_to_eth(
         mockDeployed.art721, 
-        rock, 
+        rock,
         hosea, 
-        rock_asset[3],
+        rock_asset[5],
         ethers.BigNumber.from(10000), 
-        ZERO_ADDRESS,
+        mockDeployed.usdt20,
         kind.ERC721
     );
 
@@ -208,11 +208,10 @@ async function match721BatchOrder(deployed, mockDeployed, accounts, accountsAsse
     
     // sender 
     const override = {
-        value: ethers.utils.parseEther("2"),
         gasLimit: 4100000
     };
 
-    await atomicMatch(deployed, orders.buy, orders.sell, hosea, rock, hosea, override);
+    await atomicMatch(deployed, orders.buy, orders.sell, hosea, rock, rock, override);
 
     await result(scheme);
 }
@@ -242,7 +241,7 @@ async function main() {
     
     await match1155Order(deployed, mockDeployed, accounts, accountsAssets);
 
-    // await match721BatchOrder(deployed, mockDeployed, accounts, accountsAssets);
+    await match721OrderToERC20(deployed, mockDeployed, accounts, accountsAssets);
 }
 
 main()

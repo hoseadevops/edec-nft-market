@@ -82,6 +82,14 @@ async function setApprovalForAll(deployed, mockDeployed, user){
     
     const userRegisterProxy = await deployed.registry.proxies(user.address);
     
+    const proxy = deployed.tokenTransferProxy.address;
+    const all_token = ethers.constants.MaxUint256;
+    await mockDeployed.ht20.connect(user).approve(proxy, all_token);
+    await mockDeployed.uni20.connect(user).approve(proxy, all_token);
+    await mockDeployed.btc20.connect(user).approve(proxy, all_token);
+    await mockDeployed.fee20.connect(user).approve(proxy, all_token);
+    await mockDeployed.usdt20.connect(user).approve(proxy, all_token);
+
     await mockDeployed.vr721.connect(user).setApprovalForAll(userRegisterProxy, true);
     await mockDeployed.art721.connect(user).setApprovalForAll(userRegisterProxy, true);
     await mockDeployed.game721.connect(user).setApprovalForAll(userRegisterProxy, true);

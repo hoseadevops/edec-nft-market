@@ -603,7 +603,7 @@ contract ExchangeCore is ReentrancyGuarded, Ownable {
         internal
     {
         if (amount > 0) {
-            require(tokenTransferProxy.transferFrom(token, from, to, amount));
+            require(tokenTransferProxy.transferFrom(token, from, to, amount), 'Transfer Token Error.');
         }
     }
 
@@ -721,7 +721,7 @@ contract ExchangeCore is ReentrancyGuarded, Ownable {
         returns (bytes32)
     {
         bytes32 hash = hashToSign(order, nonce);
-        require(validateOrder(hash, order, sig));
+        require(validateOrder(hash, order, sig), "Not a validate order");
         return hash;
     }
 
@@ -858,13 +858,13 @@ contract ExchangeCore is ReentrancyGuarded, Ownable {
         /* CHECKS */
 
         /* Assert sender is authorized to approve order. */
-        require(msg.sender == order.maker);
+        require(msg.sender == order.maker, "Sender must to be order.maker");
 
         /* Calculate order hash. */
         bytes32 hash = hashToSign(order, nonces[order.maker]);
 
         /* Assert order has not already been approved. */
-        require(_approvedOrdersByNonce[hash] == 0);
+        require(_approvedOrdersByNonce[hash] == 0, "Order has already been approved");
 
         /* EFFECTS */
 
@@ -895,7 +895,7 @@ contract ExchangeCore is ReentrancyGuarded, Ownable {
         bytes32 hash = requireValidOrder(order, sig, nonce);
 
         /* Assert sender is authorized to cancel order. */
-        require(msg.sender == order.maker);
+        require(msg.sender == order.maker, "Sender must to be order.maker");
 
         /* EFFECTS */
 
@@ -937,7 +937,7 @@ contract ExchangeCore is ReentrancyGuarded, Ownable {
         uint buyPrice = SaleKindInterface.calculateFinalPrice(buy.side, buy.saleKind, buy.basePrice, buy.extra, buy.listingTime, buy.expirationTime);
 
         /* Require price cross. */
-        require(buyPrice >= sellPrice);
+        require(buyPrice >= sellPrice, "buyPrice>= sellPrice");
 
         /* Maker/taker priority. */
         return sell.feeRecipient != address(0) ? sellPrice : buyPrice;
@@ -954,7 +954,7 @@ contract ExchangeCore is ReentrancyGuarded, Ownable {
     {
         /* Only payable in the special case of unwrapped Ether. */
         if (sell.paymentToken != address(0)) {
-            require(msg.value == 0);
+            require(msg.value == 0, "must send ETH.");
         }
 
         /* Calculate match price. */
@@ -976,11 +976,11 @@ contract ExchangeCore is ReentrancyGuarded, Ownable {
             /* Sell-side order is maker. */
 
             /* Assert taker fee is less than or equal to maximum fee specified by buyer. */
-            require(sell.takerRelayerFee <= buy.takerRelayerFee);
+            require(sell.takerRelayerFee <= buy.takerRelayerFee, "sell.takerRelayerFee <= buy.takerRelayerFee");
 
             if (sell.feeMethod == FeeMethod.SplitFee) {
                 /* Assert taker fee is less than or equal to maximum fee specified by buyer. */
-                require(sell.takerProtocolFee <= buy.takerProtocolFee);
+                require(sell.takerProtocolFee <= buy.takerProtocolFee, "sell.takerProtocolFee <= buy.takerProtocolFee");
 
                 /* Maker fees are deducted from the token amount that the maker receives. Taker fees are extra tokens that must be paid by the taker. */
 
@@ -1035,14 +1035,14 @@ contract ExchangeCore is ReentrancyGuarded, Ownable {
             /* Buy-side order is maker. */
 
             /* Assert taker fee is less than or equal to maximum fee specified by seller. */
-            require(buy.takerRelayerFee <= sell.takerRelayerFee);
+            require(buy.takerRelayerFee <= sell.takerRelayerFee, "buy.takerRelayerFee <= sell.takerRelayerFee");
 
             if (sell.feeMethod == FeeMethod.SplitFee) {
                 /* The Exchange does not escrow Ether, so direct Ether can only be used to with sell-side maker / buy-side taker orders. */
-                require(sell.paymentToken != address(0));
+                require(sell.paymentToken != address(0), "sell.paymentToken != address(0)");
 
                 /* Assert taker fee is less than or equal to maximum fee specified by seller. */
-                require(buy.takerProtocolFee <= sell.takerProtocolFee);
+                require(buy.takerProtocolFee <= sell.takerProtocolFee, "buy.takerProtocolFee <= sell.takerProtocolFee");
 
                 if (buy.makerRelayerFee > 0) {
                     makerRelayerFee = SafeMath.div(SafeMath.mul(buy.makerRelayerFee, price), INVERSE_BASIS_POINT);
@@ -1075,7 +1075,7 @@ contract ExchangeCore is ReentrancyGuarded, Ownable {
 
         if (sell.paymentToken == address(0)) {
             /* Special-case Ether, order must be matched by buyer. */
-            require(msg.value >= requiredAmount);
+            require(msg.value >= requiredAmount, "msg.value >= requiredAmount");
             sell.maker.transfer(receiveAmount);
             /* Allow overshoot for variable-price auctions, refund difference. */
             uint diff = SafeMath.sub(msg.value, requiredAmount);
@@ -1140,7 +1140,7 @@ contract ExchangeCore is ReentrancyGuarded, Ownable {
         /* Ensure buy order validity and calculate hash if necessary. */
         bytes32 buyHash;
         if ( buy.maker == msgSender ) {
-            require(validateOrderParameters(buy));
+            require(validateOrderParameters(buy), "validateOrderParameters buy");
         } else {
             buyHash = _requireValidOrderWithNonce(buy, buySig);
         }
@@ -1148,13 +1148,13 @@ contract ExchangeCore is ReentrancyGuarded, Ownable {
         /* Ensure sell order validity and calculate hash if necessary. */
         bytes32 sellHash;
         if ( sell.maker == msgSender ) {
-            require(validateOrderParameters(sell));
+            require(validateOrderParameters(sell), "validateOrderParameters sell");
         } else {
             sellHash = _requireValidOrderWithNonce(sell, sellSig);
         }
 
         /* Must be matchable. */
-        require(ordersCanMatch(buy, sell));
+        require(ordersCanMatch(buy, sell), "ordersCanMatch buy and sell");
 
         /* Target must exist (prevent malicious selfdestructs just prior to order settlement). */
         uint size;
@@ -1162,7 +1162,7 @@ contract ExchangeCore is ReentrancyGuarded, Ownable {
         assembly {
             size := extcodesize(target)
         }
-        require(size > 0);
+        require(size > 0, "size require");
 
         /* Must match calldata after replacement, if specified. */
         if (buy.replacementPattern.length > 0) {
@@ -1171,13 +1171,13 @@ contract ExchangeCore is ReentrancyGuarded, Ownable {
         if (sell.replacementPattern.length > 0) {
           ArrayUtils.guardedArrayReplace(sell.calldata, buy.calldata, sell.replacementPattern);
         }
-        require(ArrayUtils.arrayEq(buy.calldata, sell.calldata));
+        require(ArrayUtils.arrayEq(buy.calldata, sell.calldata), "buy and sell calldata eq");
 
         /* Retrieve delegateProxy contract. */
         OwnableDelegateProxy delegateProxy = registry.proxies(sell.maker);
 
         /* Proxy must exist. */
-        require(delegateProxy != address(0));
+        require(delegateProxy != address(0), "delegateProxy is zero");
 
         /* Access the passthrough AuthenticatedProxy. */
         AuthenticatedProxy proxy = AuthenticatedProxy(delegateProxy);
@@ -1198,21 +1198,21 @@ contract ExchangeCore is ReentrancyGuarded, Ownable {
         uint price = executeFundsTransfer(buy, sell);
 
         /* Assert implementation. */
-        require(delegateProxy.implementation() == registry.delegateProxyImplementation());
+        require(delegateProxy.implementation() == registry.delegateProxyImplementation(), "implementation require");
 
         /* Execute specified call through proxy. */
-        require(proxy.proxy(sell.target, sell.howToCall, sell.calldata));
+        require(proxy.proxy(sell.target, sell.howToCall, sell.calldata), "target calldata require");
 
         /* Static calls are intentionally done after the effectful call so they can check resulting state. */
 
         /* Handle buy-side static call if specified. */
         if (buy.staticTarget != address(0)) {
-            require(staticCall(buy.staticTarget, sell.calldata, buy.staticExtradata));
+            require(staticCall(buy.staticTarget, sell.calldata, buy.staticExtradata), "staticCall buy");
         }
 
         /* Handle sell-side static call if specified. */
         if (sell.staticTarget != address(0)) {
-            require(staticCall(sell.staticTarget, sell.calldata, sell.staticExtradata));
+            require(staticCall(sell.staticTarget, sell.calldata, sell.staticExtradata), "staticCall sell");
         }
 
         /* Log match event. */

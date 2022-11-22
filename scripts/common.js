@@ -391,7 +391,8 @@ async function makeMatchOrder(deployed, param, warp) {
     
     // 相等
     sellOrder.feeMethod = buyyOrder.feeMethod = param.feeMethod;
-    sellOrder.paymentToken = buyyOrder.paymentToken = param.paymentToken;
+    paymentToken = (param.paymentToken == ZERO_ADDRESS) ? ZERO_ADDRESS : param.paymentToken.address;
+    sellOrder.paymentToken = buyyOrder.paymentToken = paymentToken;
     sellOrder.howToCall = buyyOrder.howToCall = param.howToCall;
 
     // 计算 卖方双方 pirce
@@ -462,10 +463,10 @@ function getMockTokenAsset(accounts) {
  */
 async function result(scheme) {
 
-    let callBalanceOfSell = callBalanceOfBuy = callContractOwner = "";
+    let callBalanceOfSell = callBalanceOfBuy = callNFTContractOwner = "";
     
     if(scheme.kind == "ERC721") {
-        callContractOwner =  await scheme.nft.ownerOf(scheme.item);
+        callNFTContractOwner =  await scheme.nft.ownerOf(scheme.item);
     } else {
         callBalanceOfSell =  await scheme.nft.balanceOf(scheme.seller.address, scheme.item);
         callBalanceOfBuy =  await scheme.nft.balanceOf(scheme.buyer.address, scheme.item);
@@ -478,11 +479,24 @@ async function result(scheme) {
     const buyer_balance = await ethers.provider.getBalance(scheme.buyer.address);
 
     
+    let paymentToken = scheme.paymentToken;
+    let paymentTokenSell = 0;
+    let paymentTokenBuy = 0;
+
+    if(scheme.paymentToken != ZERO_ADDRESS) {
+        paymentToken = scheme.paymentToken.address;
+        paymentTokenSell = await scheme.paymentToken.balanceOf(scheme.seller.address);
+        paymentTokenBuy = await scheme.paymentToken.balanceOf(scheme.buyer.address);
+    }
+
     console.log({
         "kind": scheme.kind,
         seller: scheme.seller.address,
         buyer: scheme.buyer.address,
-        callContractOwner,
+        paymentToken,
+        paymentTokenSell,
+        paymentTokenBuy,
+        callNFTContractOwner,
         callBalanceOfSell,
         callBalanceOfBuy,
         fee_balance,
