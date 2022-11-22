@@ -5,8 +5,6 @@ async function main() {
 
     let nonce = await ethers.provider.getTransactionCount(from)
 
-    nonce +=1;
-
     const contract = ethers.utils.getContractAddress({ from, nonce} );
 
     console.log(

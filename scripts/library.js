@@ -186,12 +186,12 @@ async function cancelTX(nonceOfPendingTx, gasPriceHigherThanPendingTx) {
 // https://stats.goerli.net/
 // https://goerli.etherscan.io/txs
 let overrides = {
-    gasPrice: 33490945963, // (33.49 Gwei)
-    nonce: 12
+    gasPrice: 75490945963, // (75.49 Gwei)
+    nonce: 24
 };
 
 function generateArray (start, end) {
     return Array.from(new Array(end + 1).keys()).slice(start)
 }
 
-module.exports = { gasCalculate, getConfig, setConfig , deploy, getMockDeployed, getDeployed, generateArray }
+module.exports = { gasCalculate, getConfig, setConfig , deploy, getMockDeployed, getDeployed, generateArray, overrides }
