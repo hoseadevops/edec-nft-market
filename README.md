@@ -15,10 +15,10 @@ yarn
 # run localhost node, support MetaMask、dapp front-end 合约内已用 import "hardhat/console.sol" 进行充分打点 
 npx hardhat node
 
-# 部署合约存储在 : {networkId}.contract.deployed.json 中
+# 部署合约存储在 : {networkName}.deployed.json 中
 yarn env:localhost
 
-# ERC721 && ERC1155 测试
+# 测试 ERC721-ETH && ERC1155-ETH && ERC721-ERC20 
 yarn test:market
 
 # ERC721批量 测试
