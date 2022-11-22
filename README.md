@@ -18,10 +18,10 @@ npx hardhat node
 # 部署合约存储在 : {networkName}.deployed.json 中
 yarn env:localhost
 
-# 测试 ERC721-ETH && ERC1155-ETH && ERC721-ERC20 
+# 测试:固定价格 『 ERC721-ETH && ERC1155-ETH && ERC721-ERC20 』
 yarn test:market
 
-# ERC721批量 测试
+# 测试:固定价格:批量 『ERC721-ETH』 
 yarn test:market:wrap
 
 # 签名 && calldata 测试
