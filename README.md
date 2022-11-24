@@ -35,6 +35,9 @@ https://goerli.etherscan.io/address/0x116891e4824f3a1e95bd5f39badb4c907dc56592#c
 # deploy to goerli
 yarn run deploy:goerli
 
+# 测试
+npx hardhat run scripts/market.js --network goerli
+
 # ------------------ ------------------ ------------------ 
 
 ```

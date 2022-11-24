@@ -26,7 +26,8 @@ const {
     getMockTokenAsset,
     result,
     requireMatchOrder,
-    makeMatchOrder
+    makeMatchOrder,
+    makeMatchOrderGoerli
  } = require('./common.js');
 
 const helpers = require("@nomicfoundation/hardhat-network-helpers");
@@ -218,6 +219,11 @@ async function match721OrderToERC20(deployed, mockDeployed, accounts, accountsAs
 
 async function main() {
     
+    const networkName = hre.network.name;
+    if(networkName == "goerli"){
+        return testGoerli();
+    }
+    
     const [exchange, mocker, rock, hosea, yety, suky, tester, feeer, join, bob] = await ethers.getSigners();
     
     // test user
@@ -242,6 +248,64 @@ async function main() {
     await match1155Order(deployed, mockDeployed, accounts, accountsAssets);
 
     await match721OrderToERC20(deployed, mockDeployed, accounts, accountsAssets);
+}
+
+async function testGoerli() {
+    const [hosea] = await ethers.getSigners();
+    console.log("-----------------------------------------------------------");
+    console.log("test account:", [hosea.address]);
+    console.log("-----------------------------------------------------------");
+
+    const configed = await getConfig();
+    const deployed = await getDeployed(configed, hosea);
+
+    const scheme_nft_to_eth = (nft, seller, buyer, item, price, paymentToken, kind) => {
+        return {
+            nft   : nft,
+            seller: seller,
+            buyer : buyer,
+            item  : item, 
+            basePrice:  price,
+            paymentToken: paymentToken,
+            kind,
+        }
+    };
+    const scheme = scheme_nft_to_eth(
+        "0xEb1e502410Bb45e51907b88B0Ea9A08Fb575D3C2", 
+        hosea, 
+        hosea, 
+        1,
+        ethers.BigNumber.from(10000), 
+        ZERO_ADDRESS,
+        kind.ERC721
+    );
+
+    let param = {
+        saleKind: 0,                              // enum SaleKind { FixedPrice, DutchAuction }
+        howToCall: 0,                             // enum HowToCall { Call, DelegateCall }
+        feeMethod: 1,                             // enum FeeMethod { ProtocolFee, SplitFee }
+        extra: 0                                  // 
+    }; 
+
+    console.log(param, {
+        "nft": scheme.nft,
+        "seller": scheme.seller.address,
+        "buyer" : scheme.buyer.address,
+        "item" : scheme.item,
+        "basePrice" : scheme.basePrice,
+        "paymentToken" : scheme.paymentToken,
+        "kind" : scheme.kind
+    });
+
+    param = Object.assign(param, scheme);
+
+    const orders = await makeMatchOrderGoerli( deployed, param );
+    
+    await requireMatchOrder(deployed, orders.buy, orders.sell, hosea, hosea, hosea);
+
+    console.log({
+        orders
+    });
 }
 
 main()

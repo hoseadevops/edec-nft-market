@@ -430,6 +430,60 @@ async function makeMatchOrder(deployed, param, warp) {
     return orders;
 }
 
+async function makeMatchOrderGoerli(deployed, param, warp) {
+    // const latestTime = await helpers.time.latest();
+    // const oneDayBefore  = latestTime - 3600 * 24;
+    const oneDayBefore  = 1669301160;
+    sellOrder = makeOrder(deployed.exchange.address, param.seller, param.nft);
+    
+    sellOrder.taker = ZERO_ADDRESS;
+    sellOrder.side = 1;
+    
+    buyyOrder = makeOrder(deployed.exchange.address, param.buyer, param.nft);
+    
+    buyyOrder.taker = sellOrder.maker;
+    buyyOrder.side = 0;
+    
+    // 相等
+    sellOrder.feeMethod = buyyOrder.feeMethod = param.feeMethod;
+    paymentToken = (param.paymentToken == ZERO_ADDRESS) ? ZERO_ADDRESS : param.paymentToken.address;
+    sellOrder.paymentToken = buyyOrder.paymentToken = paymentToken;
+    sellOrder.howToCall = buyyOrder.howToCall = param.howToCall;
+
+    // 计算 卖方双方 pirce
+    sellOrder.saleKind  = buyyOrder.saleKind  = param.saleKind;
+    sellOrder.basePrice = buyyOrder.basePrice = param.basePrice;
+    sellOrder.extra     = buyyOrder.extra     = param.extra;
+    sellOrder.listingTime = buyyOrder.listingTime = oneDayBefore;
+    sellOrder.expirationTime = buyyOrder.expirationTime = 0;
+
+    // 互斥 根据该字段 判断最终结算价格
+    sellOrder.feeRecipient = FEE_RECIPIENT;
+    buyyOrder.feeRecipient = ZERO_ADDRESS;
+
+    // calldata
+    if(param.kind == "ERC721") {
+        sellOrder.calldata = sellERC721ABI(param.seller.address, param.item);
+        buyyOrder.calldata = buyERC721ABI(param.buyer.address, param.item);
+        
+        sellOrder.replacementPattern = encodeERC721ReplacementPatternSell;
+        buyyOrder.replacementPattern = encodeERC721ReplacementPatternBuy;
+    }else{
+        sellOrder.calldata = sellERC1155ABI(param.seller.address, param.item, param.value);
+        buyyOrder.calldata = buyERC1155ABI(param.buyer.address, param.item, param.value);
+        
+        sellOrder.replacementPattern = encodeERC1155ReplacementPatternSell;
+        buyyOrder.replacementPattern = encodeERC1155ReplacementPatternBuy;
+    }
+
+    const orders = {
+        sell: sellOrder,
+        buy: buyyOrder
+    };
+    console.log(orders);
+
+    return orders;
+}
 
 /** 获取用户 mock 资产集合
  * @param {*} accounts 
@@ -534,5 +588,6 @@ module.exports = {
     getMockTokenAsset,
     result,
     requireMatchOrder,
-    makeMatchOrder
+    makeMatchOrder,
+    makeMatchOrderGoerli
  }
