@@ -188,7 +188,7 @@ async function signature(deployed, order, sender) {
     const eip712Domain = {
         name: 'Core Sky Exchange Contract',
         version: '1.0',
-        chainId: 1,
+        chainId: 5,
         verifyingContract: deployed.exchange.address,
     };
     const nonces = await deployed.exchange.nonces(sender.address);

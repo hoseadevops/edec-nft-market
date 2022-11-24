@@ -380,7 +380,9 @@ contract ExchangeCore is ReentrancyGuarded, Ownable {
     // In order to protect against orders that are replayable across forked chains,
     // either the solidity version needs to be bumped up or it needs to be retrieved
     // from another contract.
-    uint256 private constant _CHAIN_ID = 1;
+    // uint256 private constant _CHAIN_ID = 1;
+
+    uint256 private _CHAIN_ID = 1;
 
     // Note: the domain separator is derived and verified in the constructor. */
     bytes32 public DOMAIN_SEPARATOR;
@@ -536,6 +538,14 @@ contract ExchangeCore is ReentrancyGuarded, Ownable {
         onlyOwner
     {
         exchangeToken = newExchangeToken;
+    }
+
+    function changeChainID(uint256 chainID)
+        public
+        onlyOwner
+    {
+        _CHAIN_ID = chainID;
+        DOMAIN_SEPARATOR = _deriveDomainSeparator();
     }
 
     /**
