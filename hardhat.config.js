@@ -8,7 +8,7 @@ require('hardhat-docgen');
 require("xdeployer");
 
 require("dotenv").config();
-const { ALCHEMY_API_KEY, GOERLI_PRIVATE_KEY, ETHERSCAN_API_KEY, BSCSCAN_API_KEY } = process.env;
+const { ALCHEMY_API_KEY, GOERLI_PRIVATE_KEY1,GOERLI_PRIVATE_KEY2, ETHERSCAN_API_KEY, BSCSCAN_API_KEY } = process.env;
 
 module.exports = {
     docgen: {
@@ -58,12 +58,12 @@ module.exports = {
         },
         goerli: {
           url: `https://eth-goerli.g.alchemy.com/v2/${ALCHEMY_API_KEY}`,
-          accounts: [GOERLI_PRIVATE_KEY],
+          accounts: [GOERLI_PRIVATE_KEY1, GOERLI_PRIVATE_KEY2],
           gasMultiplier: 1.3,
         },
         bsctest: {
             url: `https://data-seed-prebsc-1-s1.binance.org:8545`,
-            accounts: [GOERLI_PRIVATE_KEY],
+            accounts: [GOERLI_PRIVATE_KEY1],
             chainId: 97,
         },
     },

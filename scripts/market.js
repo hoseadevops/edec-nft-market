@@ -1,4 +1,4 @@
-const { getConfig, getDeployed, getMockDeployed, generateArray } = require('./library.js');
+const { getConfig, getDeployed, getMockDeployed, generateArray, registerWallet } = require('./library.js');
 const { 
     encodeERC721ReplacementPatternSell,
     encodeERC721ReplacementPatternBuy,
@@ -32,23 +32,24 @@ const {
 
 const helpers = require("@nomicfoundation/hardhat-network-helpers");
 
+const scheme_nft_to_eth = (nft, seller, buyer, item, price, paymentToken, kind) => {
+    return {
+        nft   : nft,
+        seller: seller,
+        buyer : buyer,
+        item  : item, 
+        basePrice:  price,
+        paymentToken: paymentToken,
+        kind,
+    }
+};
+
 async function match721Order(deployed, mockDeployed, accounts, accountsAssets)
 {
     const [rock, hosea, yety, suky, join, bob] = accounts;
     const [rock_asset, hosea_asset, yety_asset, suky_asset, join_asset, bob_asset] = accountsAssets;
     
     // rock 以 price 价格 出售 nft asset 
-    const scheme_nft_to_eth = (nft, seller, buyer, item, price, paymentToken, kind) => {
-        return {
-            nft   : nft,
-            seller: seller,
-            buyer : buyer,
-            item  : item, 
-            basePrice:  price,
-            paymentToken: paymentToken,
-            kind,
-        }
-    };
     const scheme = scheme_nft_to_eth(
         mockDeployed.art721, 
         rock, 
@@ -249,30 +250,22 @@ async function main() {
 
     await match721OrderToERC20(deployed, mockDeployed, accounts, accountsAssets);
 }
-
 async function testGoerli() {
-    const [hosea] = await ethers.getSigners();
+    // 0x3A3455DF56DF22d3197aC06E843857DE9adC106d
+    // 0x2F4fc3920f99531067781725825B2BC8BA99F939
+    const [rock, hosea] = await ethers.getSigners();
     console.log("-----------------------------------------------------------");
-    console.log("test account:", [hosea.address]);
+    console.log("test account:", [rock.address, hosea.address]);
     console.log("-----------------------------------------------------------");
 
     const configed = await getConfig();
-    const deployed = await getDeployed(configed, hosea);
+    const deployed = await getDeployed(configed, rock);
 
-    const scheme_nft_to_eth = (nft, seller, buyer, item, price, paymentToken, kind) => {
-        return {
-            nft   : nft,
-            seller: seller,
-            buyer : buyer,
-            item  : item, 
-            basePrice:  price,
-            paymentToken: paymentToken,
-            kind,
-        }
-    };
+    const NFT = '0xC0Fe3203Fa908e4875dDC2757cD1C3B49a7fae1C';
+
     const scheme = scheme_nft_to_eth(
-        "0xEb1e502410Bb45e51907b88B0Ea9A08Fb575D3C2", 
-        hosea, 
+        NFT, 
+        rock, 
         hosea, 
         1,
         ethers.BigNumber.from(10000), 
@@ -301,11 +294,24 @@ async function testGoerli() {
 
     const orders = await makeMatchOrderGoerli( deployed, param );
     
-    await requireMatchOrder(deployed, orders.buy, orders.sell, hosea, hosea, hosea);
+    // await requireMatchOrder(deployed, orders.buy, orders.sell, hosea, hosea, hosea);
 
-    console.log({
-        orders
-    });
+    const override = {
+        value: ethers.utils.parseEther("0.3"),
+        gasLimit: 4100000
+    };
+    // 注册代理
+    await registerWallet(deployed, rock);
+    await registerWallet(deployed, hosea);
+
+    // 授权token
+    const rockRegisterProxy = await deployed.registry.proxies(rock.address);
+    const ERC721Faucet = await ethers.getContractFactory("ERC721Faucet", {signer : rock});
+    const ERC721FaucetObj  = ERC721Faucet.attach(NFT);
+    await ERC721FaucetObj.connect(rock).setApprovalForAll(rockRegisterProxy, true);
+
+    // 调用
+    await atomicMatch(deployed, orders.buy, orders.sell, hosea, rock, hosea, override);
 }
 
 main()

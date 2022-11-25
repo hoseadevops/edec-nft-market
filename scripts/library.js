@@ -194,4 +194,23 @@ function generateArray (start, end) {
     return Array.from(new Array(end + 1).keys()).slice(start)
 }
 
-module.exports = { gasCalculate, getConfig, setConfig , deploy, getMockDeployed, getDeployed, generateArray, overrides }
+
+/** 用户注册自己的钱包
+ *  
+ * @param {*} deployed
+ * @param {*} user 
+ */
+ async function registerWallet(deployed, user) {
+    const register = await deployed.registry.proxies(user.address);
+    console.log("debug-register:", register);
+    if(register == '0x0000000000000000000000000000000000000000') {
+        const tx = await deployed.registry.connect(user).registerProxy();
+        console.log(tx);
+        await tx.wait();
+        console.log(`User ${ (user.address)} is registed.`);
+    }else{
+        console.log(`User ${ (user.address)} is registed already!`);
+    }
+}
+
+module.exports = { gasCalculate, getConfig, setConfig , deploy, getMockDeployed, getDeployed, generateArray, overrides, registerWallet }

@@ -15,7 +15,7 @@ const kind = {
     "ERC1155": "ERC1155"
 };
 // feeer EOA if an contract  must can reciver eth.
-const FEE_RECIPIENT = "0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199";
+const FEE_RECIPIENT = "0xB3b765AC9DD4A9Bde5B157fDDc492b1F5BB8547f";
 
 const contract_ABI = [
     "function transferFrom(address from, address to, uint256 tokenId)",
@@ -79,10 +79,12 @@ function buyERC721ABI( buyer, id , from) {
 function sellERC1155ABI( seller, id, value) {
     return iface.encodeFunctionData("safeTransferFrom", [seller, ZERO_ADDRESS, id, value, '0x']);
 }
+
 // get 1155 buy calldata
 function buyERC1155ABI( buyer, id, value, ) {
     return iface.encodeFunctionData("safeTransferFrom", [ZERO_ADDRESS, buyer, id, value, '0x']);
 }
+
 // --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 /** default order
  * @param { exchange contract address} exchange 
@@ -178,6 +180,7 @@ function getEIP712TypedData(orderStr, eip712Domain, nonce) {
         }
     }
 }
+
 /** sign
  * 
  * @param {签名数据} hash 
@@ -431,9 +434,7 @@ async function makeMatchOrder(deployed, param, warp) {
 }
 
 async function makeMatchOrderGoerli(deployed, param, warp) {
-    // const latestTime = await helpers.time.latest();
-    // const oneDayBefore  = latestTime - 3600 * 24;
-    const oneDayBefore  = 1669301160;
+    const oneDayBefore  = 1669132800;
     sellOrder = makeOrder(deployed.exchange.address, param.seller, param.nft);
     
     sellOrder.taker = ZERO_ADDRESS;

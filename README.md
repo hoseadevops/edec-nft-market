@@ -29,8 +29,11 @@ npx hardhat test
 # ------------------ ------------------ ------------------ 
 
 # goerli
-手续费 ERC20 token  可自己调用 faucet 方法 获取 token
-https://goerli.etherscan.io/address/0x116891e4824f3a1e95bd5f39badb4c907dc56592#code
+手续费 ERC20 token 可自己调用 faucet 方法 获取 token
+https://goerli.etherscan.io/address/0x116891E4824f3A1E95Bd5f39BADB4C907dc56592#code
+
+测试用 ERC721 token 可自己调用 faucet 方法 获取 token
+https://goerli.etherscan.io/address/0xC0Fe3203Fa908e4875dDC2757cD1C3B49a7fae1C#code
 
 # deploy to goerli
 yarn run deploy:goerli
