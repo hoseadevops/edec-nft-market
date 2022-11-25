@@ -1,22 +1,5 @@
 const { getConfig, getMockDeployed, getDeployed, generateArray, registerWallet } = require('./library.js');
 
-/** 用户注册自己的钱包
- *  
- * @param {*} deployed
- * @param {*} user 
- */
-// async function registerWallet(deployed, user) {
-//     const register = await deployed.registry.proxies(user.address);
-//     console.log("debug-register:", register);
-//     if(register == '0x0000000000000000000000000000000000000000') {
-//         const tx = await deployed.registry.connect(user).registerProxy();
-//         console.log(tx);
-//         await tx.wait();
-//         console.log(`User ${ (user.address)} is registed.`);
-//     }else{
-//         console.log(`User ${ (user.address)} is registed already!`);
-//     }
-// }
 
 /** 初始化测试token 【erc20, erc721, erc1155】
  * 

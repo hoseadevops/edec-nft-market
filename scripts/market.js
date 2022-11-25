@@ -300,6 +300,7 @@ async function testGoerli() {
         value: ethers.utils.parseEther("0.3"),
         gasLimit: 4100000
     };
+    
     // 注册代理
     await registerWallet(deployed, rock);
     await registerWallet(deployed, hosea);
