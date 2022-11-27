@@ -16,13 +16,15 @@ contract ERC721Faucet is ERC721 {
 
     constructor() ERC721("EF721", "EF") {}
 
-    function faucet() public {
+    function faucet() public returns( uint256, uint256 ) {
         uint tokenId = _tokenIds.current();
+        uint first = tokenId; 
         maxTokenId = tokenId + count - 1;
         while( tokenId <= maxTokenId ) {
             _mint(msg.sender, tokenId);
             _tokenIds.increment();
             tokenId = _tokenIds.current();
         }
+        return (first, maxTokenId);
     }
 }
