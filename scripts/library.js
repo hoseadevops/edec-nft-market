@@ -41,17 +41,20 @@ async function getDeployed(config, signer) {
     const TokenTransferProxy = await ethers.getContractFactory("MarketTokenTransferProxy", {signer : signer});
     const MarketExchange = await ethers.getContractFactory("MarketExchange", {signer : signer});
     const NFTMarketWrap = await ethers.getContractFactory("NFTMarketWrap", {signer : signer});
+    const Atomicizer = await ethers.getContractFactory("Atomicizer", {signer : signer});
    
     const registry = MarketRegistry.attach(config.MarketRegistry);
     const tokenTransferProxy = TokenTransferProxy.attach(config.MarketTokenTransferProxy);
     const exchange = MarketExchange.attach(config.MarketExchange);
     const exchangeWrap = NFTMarketWrap.attach(config.NFTMarketWrap);
+    const atomicizer = Atomicizer.attach(config.Atomicizer);
 
     return {
         registry: registry,
         tokenTransferProxy: tokenTransferProxy, 
         exchange: exchange,
-        exchangeWrap: exchangeWrap
+        exchangeWrap: exchangeWrap,
+        atomicizer: atomicizer
     }
 }
 

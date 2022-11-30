@@ -25,6 +25,12 @@ const contract_ABI = [
 ];
 let iface = new ethers.utils.Interface(contract_ABI);
 
+// transactions = [
+//     { token: mockDeployed.art721.address, seller: seller1.address, buyer: buyer.address, id: seller1_asset[1], value: '0' },
+//     { token: mockDeployed.vr721.address, seller: seller2.address, buyer: buyer.address, id: seller2_asset[1], value: '0' },
+//     { token: mockDeployed.game721.address, seller: seller3.address, buyer: buyer.address, id: seller3_asset[1], value: '0' },
+// ];
+
 // get 721 sell calldata
 function sellERC721ABI(seller, id, to) {
     if(!to) {
@@ -33,38 +39,17 @@ function sellERC721ABI(seller, id, to) {
     return iface.encodeFunctionData("transferFrom", [seller, to, id]);
 }
 
-function batchERC721ABI(transactions) {
-    const sell = [
+function batchERC721Atomicized(transactions) {
+    const atomicize = [
         transactions.map(t => t.token),
         transactions.map(t => t.value),
         transactions.map(t => {
-            t.calldata = sellERC721ABI(t.maker, t.id, t.taker);
+            t.calldata = iface.encodeFunctionData("transferFrom", [t.seller, t.buyer, t.id])
             return (t.calldata.length - 2) / 2;
         }),
        transactions.map(t => t.calldata).reduce((x, y) => x + y.slice(2))
     ]
-    const buy = [
-        transactions.map(t => t.token),
-        transactions.map(t => t.value),
-        transactions.map(t => {
-            t.calldata = sellERC721ABI(t.taker, t.id, t.maker);
-            return (t.calldata.length - 2) / 2;
-        }),
-       transactions.map(t => t.calldata).reduce((x, y) => x + y.slice(2))
-    ]
-
-    console.log({
-        "batchERC721ABI" : "debug",
-        sell, 
-        buy
-    });
-
-    const sellCalldata = iface.encodeFunctionData("atomicize", ...sell);
-    const buyCalldata = iface.encodeFunctionData("atomicize", ...buy);
-    return {
-        sellCalldata,
-        buyCalldata
-    }
+    return iface.encodeFunctionData("atomicize", [...atomicize]);
 }
 
 // get 721 buy calldata
@@ -191,7 +176,7 @@ async function signature(deployed, order, sender) {
     const eip712Domain = {
         name: 'Core Sky Exchange Contract',
         version: '1.0',
-        chainId: 5,
+        chainId: 1,
         verifyingContract: deployed.exchange.address,
     };
     const nonces = await deployed.exchange.nonces(sender.address);
@@ -389,7 +374,8 @@ async function makeMatchOrder(deployed, param, warp) {
     
     buyyOrder = makeOrder(deployed.exchange.address, param.buyer, param.nft.address);
     
-    buyyOrder.taker = sellOrder.maker;
+    // buyyOrder.taker = sellOrder.maker;
+    buyyOrder.taker = ZERO_ADDRESS;
     buyyOrder.side = 0;
     
     // 相等
@@ -576,6 +562,7 @@ module.exports = {
 
     sellERC721ABI,
     buyERC721ABI,
+    batchERC721Atomicized,
 
     makeOrder,
     signature,
@@ -590,5 +577,6 @@ module.exports = {
     result,
     requireMatchOrder,
     makeMatchOrder,
-    makeMatchOrderGoerli
+    makeMatchOrderGoerli,
+    FEE_RECIPIENT
  }
