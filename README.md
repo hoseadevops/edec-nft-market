@@ -1,6 +1,6 @@
 # NFT market contract
 
-* 合约支持
+* 合约支持(ETH,ERC20,ERC721, ERC1155)
   * 固定价格销售
   * 拍卖销售
   * 报价单个NFT
