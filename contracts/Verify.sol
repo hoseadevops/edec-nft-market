@@ -76,6 +76,15 @@ contract Verify {
             );
     }
 
+    function encodeERC721OfferReplacementPatternSell() public pure returns (bytes memory) {
+        return
+            abi.encodeWithSelector(
+                bytes4(0x00000000),
+                0x0000000000000000000000000000000000000000000000000000000000000000,
+                0x0000000000000000000000000000000000000000000000000000000000000000,
+                0x0000000000000000000000000000000000000000000000000000000000000000
+            );
+    }
     function encodeERC721ReplacementPatternSell() public pure returns (bytes memory) {
         return
             abi.encodeWithSelector(
@@ -93,6 +102,16 @@ contract Verify {
                 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
                 0x0000000000000000000000000000000000000000000000000000000000000000,
                 0x0000000000000000000000000000000000000000000000000000000000000000
+            );
+    }
+
+    function encodeERC721OfferReplacementPatternBuy() public pure returns (bytes memory) {
+        return
+            abi.encodeWithSelector(
+                bytes4(0x00000000),
+                0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+                0x0000000000000000000000000000000000000000000000000000000000000000,
+                0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
             );
     }
     // function safeTransferFrom(address _from, address _to, uint256 _id, uint256 _value, bytes calldata _data)

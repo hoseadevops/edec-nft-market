@@ -4,6 +4,8 @@ const {
     encodeERC721ReplacementPatternBuy,
     encodeERC1155ReplacementPatternSell,
     encodeERC1155ReplacementPatternBuy,
+    encodeERC721OfferReplacementPatternBuy,
+    encodeERC721OfferReplacementPatternSell,
 
     ZERO_ADDRESS,
     ZERO_HASH,
@@ -15,6 +17,7 @@ const {
     sellERC721ABI,
     buyERC721ABI,
     batchERC721Atomicized,
+    ERC721ABI,
 
     makeOrder,
     signature,
@@ -48,7 +51,6 @@ const scheme_nft_to_eth = (nft, seller, buyer, item, price, paymentToken, kind, 
         value
     }
 };
-
 
 async function match721Order (deployed, mockDeployed, accounts, accountsAssets) {
     const [rock, hosea, yety, suky, join, bob] = accounts;
@@ -99,23 +101,37 @@ async function match721Order (deployed, mockDeployed, accounts, accountsAssets) 
     await result(scheme);
 }
 
-
-async function resultBatch(mockDeployed, seller1, buyer) {
-    seller1_f = await mockDeployed.art721.balanceOf(seller1.address);
-    seller2_f = await mockDeployed.vr721.balanceOf(seller1.address);
-    seller3_f = await mockDeployed.game721.balanceOf(seller1.address);
+async function resultBatch(mockDeployed, seller, buyer, tokenId) {
+    seller_art = await mockDeployed.art721.balanceOf(seller.address);
+    seller_vr = await mockDeployed.vr721.balanceOf(seller.address);
+    seller_game = await mockDeployed.game721.balanceOf(seller.address);
    
-    buyer1_f = await mockDeployed.art721.balanceOf(buyer.address);
-    buyer2_f = await mockDeployed.vr721.balanceOf(buyer.address);
-    buyer3_f = await mockDeployed.game721.balanceOf(buyer.address);
+    buyer_art = await mockDeployed.art721.balanceOf(buyer.address);
+    buyer_vr = await mockDeployed.vr721.balanceOf(buyer.address);
+    buyer_game = await mockDeployed.game721.balanceOf(buyer.address);
 
     console.log({
-        seller1_f,
-        seller2_f,
-        seller3_f,
-        buyer1_f,
-        buyer2_f,
-        buyer3_f
+        seller_art,
+        seller_vr,
+        seller_game,
+        buyer_art,
+        buyer_vr,
+        buyer_game
+    })
+}
+
+async function resultSingle(nft, erc20, seller, buyer) {
+    seller_balance_nft = await nft.balanceOf(seller.address);
+    buyer_balance_nft = await nft.balanceOf(buyer.address);
+
+    seller_balance_erc20 = await erc20.balanceOf(seller.address);
+    buyer_balance_erc20 = await erc20.balanceOf(buyer.address);
+
+    console.log({
+        seller_balance_nft,
+        buyer_balance_nft,
+        seller_balance_erc20,
+        buyer_balance_erc20
     })
 }
 
@@ -287,6 +303,57 @@ async function match721OrderToERC20 (deployed, mockDeployed, accounts, accountsA
 
     await result(scheme);
 }
+//报价
+async function match721OrderOfferToERC20 (deployed, mockDeployed, accounts, accountsAssets) {
+    const [rock, hosea, yety, suky, join, bob] = accounts;
+    const [rock_asset, hosea_asset, yety_asset, suky_asset, join_asset, bob_asset] = accountsAssets;
+
+    const seller = rock
+    const buyer = hosea
+    const tokenID = rock_asset[10]
+
+    const sellCalldata = ERC721ABI(seller.address, buyer.address, tokenID);
+    const buyCalldata = ERC721ABI(ZERO_ADDRESS, buyer.address, 0);
+
+    sellOrder = makeOrder(deployed.exchange.address, seller, mockDeployed.art721.address);
+    sellOrder.taker = buyer.address
+    sellOrder.side = 1
+    sellOrder.feeMethod = 1
+    sellOrder.paymentToken = mockDeployed.usdt20.address
+    sellOrder.howToCall = 0
+    sellOrder.saleKind = 0
+    sellOrder.basePrice = ethers.BigNumber.from(10000)
+    sellOrder.extra = 0
+    sellOrder.listingTime = parseInt(1638283031)
+    sellOrder.expirationTime = 0
+    sellOrder.feeRecipient = ZERO_ADDRESS;
+    sellOrder.calldata = sellCalldata
+    sellOrder.replacementPattern = encodeERC721OfferReplacementPatternSell
+
+    buyOrder = deepcopy(sellOrder);
+    buyOrder.calldata = buyCalldata
+    buyOrder.replacementPattern = encodeERC721OfferReplacementPatternBuy
+    buyOrder.side = 0
+    buyOrder.maker = buyer.address
+    buyOrder.taker = ZERO_ADDRESS
+    buyOrder.feeRecipient = FEE_RECIPIENT;
+
+    console.log({
+        buyOrder, sellOrder
+    })
+    await requireMatchOrder(deployed, buyOrder, sellOrder, buyer, seller, seller);
+
+    // sender 
+    const override = {
+        gasLimit: 4100000
+    };
+
+    await resultSingle(mockDeployed.art721, mockDeployed.usdt20, seller, buyer);
+    
+    await atomicMatch(deployed, buyOrder, sellOrder, buyer, seller, seller, override);
+
+    await resultSingle(mockDeployed.art721, mockDeployed.usdt20, seller, buyer);
+}
 
 async function main () {
 
@@ -320,7 +387,9 @@ async function main () {
 
     // await match721OrderToERC20(deployed, mockDeployed, accounts, accountsAssets);
 
-    await match721BatchOrder(deployed, mockDeployed, accounts, accountsAssets);
+    // await match721BatchOrder(deployed, mockDeployed, accounts, accountsAssets);
+
+    await match721OrderOfferToERC20(deployed, mockDeployed, accounts, accountsAssets);
 }
 
 async function testGoerli () {
