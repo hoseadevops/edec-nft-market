@@ -10,6 +10,17 @@
   * 批量购买（购物车）
   * 批量销售 NFT
 
+* Methods of sale
+  * English Auction (requires asset escrow to prevent griefing attacks)
+  * Second-price Vickrey auction
+* Order kinds
+  * Transaction to transaction, directly without ERC20 intermediation
+  * Fungible to fungible, without necessarily requiring the ERC20 spec
+  * Cross-side static calls, can enforce e.g. token proportionality generically (!)
+  * Proxy contract restriction - prevent function execution for escrow - upgrade by authorizing double-proxy contract with new registry
+  * Completely separate order executor from order maker/taker - signed messages for proxy contracts, fees back to relayer (or market)
+
+
 > 匹配订单 从买/卖双方订单开始。卖方创建销售订单，以固定价格或者竞拍的方式，将 NFT挂出去; 买方创建购买订单，并将卖方创建的销售订单一起，发给交易合约 Exchange Contract。交易合约将对订单校验，校验通过后，完成转移：
 * 执行转账和支付各项手续费
 * NFT产品转移
