@@ -1,12 +1,14 @@
 # NFT market contract
 
 * 合约支持(ETH,ERC20,ERC721, ERC1155)
-  * 固定价格销售
-  * 拍卖销售
-  * 报价单个NFT
-  * 报价合集NFT
+  * 销售:固定价格
+    * 报价单个 NFT
+    * 报价合集 NFT
+  * 销售:拍卖价格
+    *  英式拍卖（English Auction）
+    *  维克瑞拍卖（Second-price Vickrey auction）
   * 批量购买（购物车）
-  * 批量销售NFT
+  * 批量销售 NFT
 
 > 匹配订单 从买/卖双方订单开始。卖方创建销售订单，以固定价格或者竞拍的方式，将 NFT挂出去; 买方创建购买订单，并将卖方创建的销售订单一起，发给交易合约 Exchange Contract。交易合约将对订单校验，校验通过后，完成转移：
 * 执行转账和支付各项手续费
