@@ -101,7 +101,6 @@ async function getMockDeployed(config, signer) {
     }
 }
 
-
 /**  部署合约
  * 
  * @param {acount object} signer 
@@ -196,7 +195,6 @@ let overrides = {
 function generateArray (start, end) {
     return Array.from(new Array(end + 1).keys()).slice(start)
 }
-
 
 /** 用户注册自己的钱包
  *  
