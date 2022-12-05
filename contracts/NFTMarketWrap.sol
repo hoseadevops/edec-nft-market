@@ -104,7 +104,6 @@ interface Exchange {
         payable;       
 }
 
-
 contract NFTMarketWrap {
     
     Exchange public exchange;
