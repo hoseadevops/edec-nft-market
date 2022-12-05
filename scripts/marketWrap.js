@@ -137,7 +137,7 @@ async function matchOrder(deployed, mockDeployed, accounts, accountsAssets)
 
     // sender 
     const override = {
-        value: ethers.utils.parseEther("2"),
+        value: ethers.BigNumber.from(200000),
         gasLimit: 4100000
     };
 

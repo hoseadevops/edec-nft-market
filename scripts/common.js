@@ -370,8 +370,7 @@ async function atomicMatch(deployed, buy, sell, buyyer, seller, sender, override
  * @param {*} param order: feeMethod、paymentToken、howToCall、asset、basePrice、saleKind、extra
  */
 async function makeMatchOrder(deployed, param, warp) {
-    const latestTime = await helpers.time.latest();
-    const oneDayBefore  = latestTime - 3600 * 24;
+    const oneDayBefore  = 1669132800;
 
     sellOrder = makeOrder(deployed.exchange.address, param.seller, param.nft.address);
     
@@ -380,8 +379,7 @@ async function makeMatchOrder(deployed, param, warp) {
     
     buyyOrder = makeOrder(deployed.exchange.address, param.buyer, param.nft.address);
     
-    // buyyOrder.taker = sellOrder.maker;
-    buyyOrder.taker = ZERO_ADDRESS;
+    buyyOrder.taker = sellOrder.maker;
     buyyOrder.side = 0;
     
     // 相等
