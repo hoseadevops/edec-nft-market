@@ -28,7 +28,8 @@ const {
     getMockTokenAsset,
     result,
     requireMatchOrder,
-    makeMatchOrder
+    makeMatchOrder,
+    makeMatchOrderGoerli
  } = require('./common.js');
 
  const helpers = require("@nomicfoundation/hardhat-network-helpers");
@@ -160,8 +161,68 @@ async function matchOrder(deployed, mockDeployed, accounts, accountsAssets)
     await result(scheme2);
 }
 
+async function testGoerli () {
+    // 0x3A3455DF56DF22d3197aC06E843857DE9adC106d
+    // 0x2F4fc3920f99531067781725825B2BC8BA99F939
+    const [rock, hosea] = await ethers.getSigners();
+    console.log("-----------------------------------------------------------");
+    console.log("test account:", [rock.address, hosea.address]);
+    console.log("-----------------------------------------------------------");
+
+    const configed = await getConfig();
+    const deployed = await getDeployed(configed, rock);
+
+    const NFT = '0xC0Fe3203Fa908e4875dDC2757cD1C3B49a7fae1C';
+
+    const scheme = scheme_nft_to_eth(
+        NFT,
+        rock,
+        hosea,
+        2,
+        ethers.BigNumber.from(10000),
+        ZERO_ADDRESS,
+        kind.ERC721
+    );
+
+    let param = {
+        saleKind: 0,                              // enum SaleKind { FixedPrice, DutchAuction }
+        howToCall: 0,                             // enum HowToCall { Call, DelegateCall }
+        feeMethod: 1,                             // enum FeeMethod { ProtocolFee, SplitFee }
+        extra: 0                                  // 
+    };
+
+    param = Object.assign(param, scheme);
+
+    const orders = await makeMatchOrderGoerli(deployed, param);
+
+    // await requireMatchOrder(deployed, orders.buy, orders.sell, hosea, hosea, hosea);
+
+    const override = {
+        value: ethers.utils.parseEther("0.3"),
+        gasLimit: 4100000
+    };
+
+    // 注册代理
+    await registerWallet(deployed, rock);
+    await registerWallet(deployed, hosea);
+
+    // 授权token
+    const rockRegisterProxy = await deployed.registry.proxies(rock.address);
+    const ERC721Faucet = await ethers.getContractFactory("ERC721Faucet", { signer: rock });
+    const ERC721FaucetObj = ERC721Faucet.attach(NFT);
+    await ERC721FaucetObj.connect(rock).setApprovalForAll(rockRegisterProxy, true);
+
+    // 调用
+    await atomicMatch(deployed, orders.buy, orders.sell, hosea, rock, hosea, override);
+}
+
 async function main() {
     
+    const networkName = hre.network.name;
+    if (networkName == "goerli") {
+        return testGoerli();
+    }
+
     const [exchange, mocker, rock, hosea, yety, suky, tester, feeer, join, bob] = await ethers.getSigners();
     
     // test user
