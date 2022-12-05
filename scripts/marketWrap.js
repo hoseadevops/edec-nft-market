@@ -147,6 +147,7 @@ async function matchOrder(deployed, mockDeployed, accounts, accountsAssets)
         sells,
         sellSigs,
         ZERO_HASH,
+        [matchOrder1.sell.basePrice, matchOrder2.sell.basePrice],
         override
     );
 
