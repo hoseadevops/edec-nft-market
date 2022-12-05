@@ -208,34 +208,31 @@ contract NFTMarketWrap {
         Sig[] calldata buySigs,
         Order[] calldata sells,
         Sig[] calldata sellSigs,
-        bytes32 rssMetadata
-        )
+        bytes32 rssMetadata,
+        uint256[] calldata values
+    )
         public
         payable
     {
         uint256 totalSells = sells.length;
         
         require(totalSells == buys.length, "sells count and buys count must be equal");
-        
+        require(totalSells == values.length, "sells count and values count must be equal");
+
         require(totalSells > 1, "pls call exchange contract directly.");
         
-        uint256 perValue = msg.value / totalSells;
-        uint256 totalVal = perValue * totalSells;
-        
-        uint256 last = 0;
-        if( msg.value > totalVal) {
-            last = msg.value - totalVal;
+        uint256 totalValue = 0;
+        for( uint256 j = 0; j < totalSells; j++ ) {
+            totalValue += values[j];
         }
 
-        for (uint256 i = 0; i < totalSells; i++) {
+        require(msg.value == totalValue, "msg.value count and totalValue must be equal");
+        
+        for ( uint256 i = 0; i < totalSells; i++ ) {
 
             ArgBytes memory arg = _getBytes(buys[i], sells[i]);
 
-            if(i == totalSells - 1){
-                perValue = perValue + last;
-            }
-
-            exchange.atomicMatch_{value: perValue} (
+            exchange.atomicMatch_{value: values[i]} (
                 _getAddrs(buys[i], sells[i], msg.sender),
                 _getUint(buys[i], sells[i]),
                 _getEnum(buys[i], sells[i]),
