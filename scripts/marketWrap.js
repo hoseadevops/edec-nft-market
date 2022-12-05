@@ -33,23 +33,24 @@ const {
 
  const helpers = require("@nomicfoundation/hardhat-network-helpers");
 
+const scheme_nft_to_eth = (nft, seller, buyer, item, price, paymentToken, kind) => {
+    return {
+        nft   : nft,
+        seller: seller,
+        buyer : buyer,
+        item  : item, 
+        basePrice:  price,
+        paymentToken: paymentToken,
+        kind,
+    }
+};
+
 // 7
-async function _makeMatchOrder(deployed, mockDeployed, seller, buyer, seller_asset){
+async function _makeMatchOrder(deployed, mockDeployed, seller, buyer, seller_asset, _price){
     // rock 以 price 价格 出售 nft asset 
-    const scheme_nft_to_eth = (nft, seller, buyer, item, price, paymentToken, kind) => {
-        return {
-            nft   : nft,
-            seller: seller,
-            buyer : buyer,
-            item  : item, 
-            basePrice:  price,
-            paymentToken: paymentToken,
-            kind,
-        }
-    };
     const scheme = scheme_nft_to_eth(
         mockDeployed.art721, seller, buyer, 
-        seller_asset, ethers.BigNumber.from(100000), 
+        seller_asset, _price,
         ZERO_ADDRESS, kind.ERC721
     );
 
@@ -93,8 +94,8 @@ async function matchOrder(deployed, mockDeployed, accounts, accountsAssets)
     const [rock_asset, hosea_asset, yety_asset, suky_asset, join_asset, bob_asset] = accountsAssets;
     
 
-    match1 = await _makeMatchOrder(deployed, mockDeployed, rock, hosea, rock_asset[18]);
-    match2 = await _makeMatchOrder(deployed, mockDeployed, rock, hosea, rock_asset[19]);
+    match1 = await _makeMatchOrder(deployed, mockDeployed, rock, hosea, rock_asset[16], ethers.BigNumber.from(100000));
+    match2 = await _makeMatchOrder(deployed, mockDeployed, rock, hosea, rock_asset[17], ethers.BigNumber.from(200000));
 
     
     matchOrder1 = match1.orders;
@@ -137,7 +138,7 @@ async function matchOrder(deployed, mockDeployed, accounts, accountsAssets)
 
     // sender 
     const override = {
-        value: ethers.BigNumber.from(200000),
+        value: ethers.BigNumber.from(300000),
         gasLimit: 4100000
     };
 
