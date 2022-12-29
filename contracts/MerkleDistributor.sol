@@ -48,7 +48,7 @@ contract MerkleDistributor is AccessControl {
         project.price = _price;
     }
 
-    function claim(uint256 roundID, uint256 index, bytes32[] calldata merkleProof, bytes calldata calldataABI) public payable {
+    function claim(uint256 roundID, uint256 index, bytes calldata calldataABI, bytes32[] calldata merkleProof) public payable {
         Project storage project = round[roundID];
         
         // Verify claim
@@ -68,7 +68,7 @@ contract MerkleDistributor is AccessControl {
             if(refund > 0) payable(msg.sender).transfer(refund);
             project.receipt.transfer(project.price);
         }else{
-            require(msg.value == 0, 'You do not pay money.');
+            require(msg.value == 0, 'You do not pay ERC20 money.');
             IERC20(project.payment).safeTransferFrom(msg.sender, project.receipt, project.price);
         }
 
