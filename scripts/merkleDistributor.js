@@ -1,18 +1,17 @@
 const fs = require('fs');
-const MerkleTree = require('merkletreejs')
+const { MerkleTree } = require('merkletreejs')
 const keccak256 = require('keccak256')
 
 const { getConfig, getDeployed, getMockDeployed, generateArray } = require('./library.js');
 
-const contract_ABI = [
-    "function mint(address to, uint256 id)",
+const ABI_721 = [
     "function batchMint(address to, uint256[] ids)",
-    
-    "function mint(address to, uint256 id, uint256 amount, bytes data)",
-    "function batchMint(address to, uint256[] ids, uint256[] amounts, bytes data)"
+    "function batchTransfer(address to, uint256[] ids)"
 ];
-
-const iface = new ethers.utils.Interface(contract_ABI);
+const ABI_1155 = [
+    "function batchMint(address to, uint256[] ids, uint256[] amounts, bytes data)",
+    "function batchTransfer(address to, uint256[] ids, uint256[] amounts, bytes data)"
+]
 
 function getRandom (n, m) {
     var num = Math.floor(Math.random() * (m - n + 1) + n)
@@ -47,16 +46,16 @@ function launchpad() {
     return project;
 }
 
-// type 721 || 1155
-async function setAward(type = 721) {
+// type ERC721 || ERC1155
+async function setAward(type = 'ERC721') {
     let ido = launchpad();
     
     let players = await player();
     
-    let award_file = './scripts/award.json';
+    let award_file = `./scripts/${type}.award.json`;
     let award = [];
     for( i = 0; i < ido.nft.length; i ++ ) {
-        amount = type == 721 ? 1 : getRandom(1, 20);
+        amount = type == 'ERC721' ? 1 : getRandom(1, 20);
         let rand = getRandom(0, 98);
         let player = players[rand];
         let item = {
@@ -70,14 +69,14 @@ async function setAward(type = 721) {
     fs.writeFileSync(award_file, data);
 }
 
-async function getAward() {
-    const json = JSON.parse(fs.readFileSync('./scripts/award.json', { encoding: 'utf8' }))
+async function getAward(type = 'ERC721') {
+    const json = JSON.parse(fs.readFileSync(`./scripts/${type}.award.json`, { encoding: 'utf8' }))
     if (typeof json !== 'object') throw new Error('Invalid JSON')
     return json;
 }
 
-async function awardGroup(count = 10) {
-    let award = await getAward();
+async function awardGroup(type='ERC721', count = 10) {
+    let award = await getAward(type);
     
     group = {};
     for( i=0; i < award.length; i++ ){
@@ -121,6 +120,15 @@ async function awardGroup(count = 10) {
 }
 
 async function main () {
+    
+    // await setAward("ERC721");
+    // await setAward("ERC1155");
+    
+    const typeABI = {
+        "ERC721" : ABI_721,
+        "ERC1155" : ABI_1155
+    };
+
     const [exchange, mocker, rock, hosea, yety, suky, tester, feeer, join, bob] = await ethers.getSigners();
 
     // test user
@@ -131,16 +139,46 @@ async function main () {
     console.log("test account:", [rock.address, hosea.address, yety.address, suky.address, join.address, bob.address]);
     console.log("-----------------------------------------------------------");
 
+
+
     // get config
     // const configed = await getConfig();
     // const deployed = await getDeployed(configed, rock);
     // const mockDeployed = await getMockDeployed(configed, mocker);
 
-    let award = await awardGroup();
+    // for test
+    const type = "ERC721";
+    const roundID = 1;
+    
+    let award = await awardGroup(type);
+    const iface = new ethers.utils.Interface(typeABI[type]);
+    
+    calldatas = [];
+    
+    for(i = 0; i < award.length; i++ ) {
+        if( type == "ERC721" ) {
+            calldata = iface.encodeFunctionData("batchMint", [award[i].to, award[i].ids]);
+            calldatas.push(calldata);
+        }
 
-    for(i = 0; i < award.length; i++){
-        calldata = iface.encodeFunctionData("batchMint", [award[i].to, award[i].ids]);
+        if( type == "ERC1155" ) {
+            calldata = iface.encodeFunctionData("batchMint", [award[i].to, award[i].ids, award[i].amounts, ""]);
+            calldatas.push(calldata);
+        }
     }
+    
+    const leaves = calldatas.map(( v, k ) => {
+        console.log(k, v);
+        return keccak256([roundID, k, v]);
+    })
+    const tree = new MerkleTree(leaves, keccak256, { sort: true })
+    const root = tree.getHexRoot()
+
+    const leaf = keccak256([roundID, 0, calldatas[0]]);
+    const proof = tree.getHexProof(leaf)
+    
+    console.log(root, calldatas[0], proof, calldatas.length);
+
 }
 
 main()

@@ -4794,6 +4794,15 @@ jsprim@^1.2.2:
     json-schema "0.4.0"
     verror "1.10.0"
 
+keccak256@^1.0.6:
+  version "1.0.6"
+  resolved "https://registry.npmmirror.com/keccak256/-/keccak256-1.0.6.tgz#dd32fb771558fed51ce4e45a035ae7515573da58"
+  integrity sha512-8GLiM01PkdJVGUhR1e6M/AvWnSqYS0HaERI+K/QtStGDGlSTx2B1zTqZk4Zlqu5TxHJNTxWAdP9Y+WI50OApUw==
+  dependencies:
+    bn.js "^5.2.0"
+    buffer "^6.0.3"
+    keccak "^3.0.2"
+
 keccak@^3.0.0, keccak@^3.0.2:
   version "3.0.2"
   resolved "https://registry.npmmirror.com/keccak/-/keccak-3.0.2.tgz#4c2c6e8c54e04f2670ee49fa734eb9da152206e0"
