@@ -12,12 +12,13 @@ const ABI_1155 = [
     "function batchMint(address to, uint256[] ids, uint256[] amounts, bytes data)",
     "function batchTransfer(address to, uint256[] ids, uint256[] amounts, bytes data)"
 ]
-
+// include n and m
 function getRandom (n, m) {
     var num = Math.floor(Math.random() * (m - n + 1) + n)
     return num
 }
 
+// split array to sub array
 function splitArray(arr, len) {
     let a_len = arr.length;
     var result = [];
@@ -27,12 +28,14 @@ function splitArray(arr, len) {
     return result;
 }
 
+// mock player
 async function player(){
     const json = JSON.parse(fs.readFileSync('./scripts/player.json', { encoding: 'utf8' }))
     if (typeof json !== 'object') throw new Error('Invalid JSON')
     return Object.keys(json);;
 }
 
+// init launchpad
 function launchpad() {
     let nft_5000 = generateArray(1, 5000);
     let project = {
@@ -46,6 +49,7 @@ function launchpad() {
     return project;
 }
 
+// mock award 
 // type ERC721 || ERC1155
 async function setAward(type = 'ERC721') {
     let ido = launchpad();
@@ -68,16 +72,17 @@ async function setAward(type = 'ERC721') {
     let data = JSON.stringify(award);
     fs.writeFileSync(award_file, data);
 }
-
+// get award
 async function getAward(type = 'ERC721') {
     const json = JSON.parse(fs.readFileSync(`./scripts/${type}.award.json`, { encoding: 'utf8' }))
     if (typeof json !== 'object') throw new Error('Invalid JSON')
     return json;
 }
 
+// group and page
 async function awardGroup(type='ERC721', count = 10) {
     let award = await getAward(type);
-    
+    // group by player
     group = {};
     for( i=0; i < award.length; i++ ){
         let to = award[i].address;
@@ -93,7 +98,7 @@ async function awardGroup(type='ERC721', count = 10) {
         group[to]["ids"].push(award[i].id);
         group[to]["amounts"].push(award[i].amount);
     }
-
+    // page by player's ids with count
     award = [];
     let players = await player();
     for( j=0; j < players.length; j++ ){
@@ -121,6 +126,7 @@ async function awardGroup(type='ERC721', count = 10) {
 
 async function main () {
     
+    // mock award to json
     // await setAward("ERC721");
     // await setAward("ERC1155");
     
@@ -168,15 +174,15 @@ async function main () {
     }
     
     const leaves = calldatas.map(( v, k ) => {
-        console.log(k, v);
         return keccak256([roundID, k, v]);
-    })
+    });
+
     const tree = new MerkleTree(leaves, keccak256, { sort: true })
     const root = tree.getHexRoot()
 
     const leaf = keccak256([roundID, 0, calldatas[0]]);
     const proof = tree.getHexProof(leaf)
-    
+    console.log(tree.verify(proof, leaf, root)) // true
     console.log(root, calldatas[0], proof, calldatas.length);
 
 }
