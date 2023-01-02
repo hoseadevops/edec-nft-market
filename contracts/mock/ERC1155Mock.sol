@@ -9,20 +9,22 @@ contract ERC1155Mock is ERC1155, AccessControl {
 
     bytes32 public constant URI_SETTER_ROLE = keccak256("URI_SETTER_ROLE");
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 public constant WITHDRAW_ROLE = keccak256("WITHDRAW_ROLE");
 
-    constructor(string memory _baseUri) ERC1155(_baseUri) {
+    constructor(string memory _baseUri, address _withdraw) ERC1155(_baseUri) {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _setupRole(WITHDRAW_ROLE, _withdraw);
     }
 
     function setURI(string memory _baseUri) public onlyRole(DEFAULT_ADMIN_ROLE) {
         _setURI(_baseUri);
     }
 
-    function mint(address account, uint256 id, uint256 amount, bytes memory data) public onlyRole(DEFAULT_ADMIN_ROLE) {
+    function mint(address account, uint256 id, uint256 amount, bytes memory data) public onlyRole(WITHDRAW_ROLE) {
         _mint(account, id, amount, data);
     }
 
-    function batchMint(address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data) public onlyRole(DEFAULT_ADMIN_ROLE) {
+    function batchMint(address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data) public onlyRole(WITHDRAW_ROLE) {
         _mintBatch(to, ids, amounts, data);
     }
 

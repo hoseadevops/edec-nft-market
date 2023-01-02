@@ -1,11 +1,16 @@
 const { deploy } = require('./library.js');
 
 async function main() {
-    const [exchangeOwner] = await ethers.getSigners();
+    const [exchangeOwner, mocker] = await ethers.getSigners();
     console.log("-----------------------------------------------------------");
-    console.log("Deploying contracts with the account:", exchangeOwner.address);
+    console.log("Deploying contracts with the account:", exchangeOwner.address, mocker.address);
     console.log("-----------------------------------------------------------\n");
-    await deploy(exchangeOwner, "MerkleDistributor", "");
+    const mdObj = await deploy(exchangeOwner, "MerkleDistributor", "", exchangeOwner.address, exchangeOwner.address);
+    await deploy(mocker, "NFTDeposit", "", exchangeOwner.address, mdObj.address);
+
+    await deploy(mocker, "ERC721Mock", "art", "ERC721 Mock art", "ART721", "ipfs://", mdObj.address);
+    await deploy(mocker, "ERC1155Mock", "art", "ipfs://", mdObj.address);
+    
 }
 
 main()

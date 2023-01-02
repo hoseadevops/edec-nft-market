@@ -13,10 +13,10 @@ async function getConfigFile() {
  * @returns { json }
  */
 async function getConfig() {
-    try{
+    try {
         let rawdata = fs.readFileSync(await getConfigFile());
         return JSON.parse(rawdata);
-    }catch{
+    } catch {
         await setConfig({});
         return {};
     }
@@ -100,6 +100,30 @@ async function getMockDeployed(config, signer) {
         fee20: ERC20Mock_FEE,
     }
 }
+
+async function getDeployedMD(config, signer) {
+    console.log("debug", config);
+    // load contract
+    const MerkleDistributor = await ethers.getContractFactory("MerkleDistributor", {signer : signer});
+    const NFTDeposit = await ethers.getContractFactory("NFTDeposit", {signer : signer});
+
+    const ERC721Mock = await ethers.getContractFactory("ERC721Mock", {signer : signer});
+    const ERC1155Mock = await ethers.getContractFactory("ERC1155Mock", {signer : signer});
+   
+    const ERC1155Mock_art  = ERC1155Mock.attach(config.ERC1155Mock_art);
+    const ERC721Mock_art  = ERC721Mock.attach(config.ERC721Mock_art);
+
+    const merkleDistributor = MerkleDistributor.attach(config.MerkleDistributor);
+    const nftDeposit = NFTDeposit.attach(config.NFTDeposit);
+
+    return {
+        merkleDistributor: merkleDistributor,
+        deposit: nftDeposit, 
+        art1155: ERC1155Mock_art,
+        art721: ERC721Mock_art,
+    }
+}
+
 
 /**  部署合约
  * 
@@ -214,4 +238,4 @@ function generateArray (start, end) {
     }
 }
 
-module.exports = { gasCalculate, getConfig, setConfig , deploy, getMockDeployed, getDeployed, generateArray, overrides, registerWallet }
+module.exports = { gasCalculate, getConfig, setConfig , deploy, getMockDeployed, getDeployed, generateArray, overrides, registerWallet, getDeployedMD }

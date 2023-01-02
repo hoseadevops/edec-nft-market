@@ -10,6 +10,7 @@
     "deploy:exchange": "npx hardhat run scripts/deployMarketExchange.js",
     "deploy:exchangeWrap": "npx hardhat run scripts/deployMarketExchangeWrap.js",
     "deploy:atomicizer": "npx hardhat run scripts/deployAtomicizer.js",
+    "deploy:deployMerkleDistributor": "npx hardhat run scripts/deployMerkleDistributor.js",
     "config": "npx hardhat run scripts/configMarket.js",
     "computeAddress": "npx hardhat run scripts/contractAddress.js",
     "verify": "npx hardhat verify",
@@ -22,7 +23,9 @@
     "test:market": "npx hardhat run scripts/market.js --network localhost",
     "test:market:wrap": "npx hardhat run scripts/marketWrap.js --network localhost",
     "env:localhost": "rm -rf ./localhost.deployed.json && yarn run compile && yarn run deploy:mock --network localhost && yarn run deploy:localhost && yarn run test:fixture --network localhost",
-    "env:goerli": "rm -rf ./goerli.deployed.json && yarn run compile && yarn run deploy:goerli"
+    "env:goerli": "rm -rf ./goerli.deployed.json && yarn run compile && yarn run deploy:goerli",
+    "env:localhost:md": "rm -rf ./localhost.deployed.json && yarn run compile && yarn run deploy:deployMerkleDistributor --network localhost",
+    "test:md": "npx hardhat run scripts/merkleDistributor.js --network localhost"
   },
   "devDependencies": {
     "@ethersproject/abi": "^5.7.0",

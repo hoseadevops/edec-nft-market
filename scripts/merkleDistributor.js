@@ -2,7 +2,7 @@ const fs = require('fs');
 const { MerkleTree } = require('merkletreejs')
 const keccak256 = require('keccak256')
 
-const { getConfig, getDeployed, getMockDeployed, generateArray } = require('./library.js');
+const { getConfig, generateArray, getDeployedMD } = require('./library.js');
 
 const ABI_721 = [
     "function batchMint(address to, uint256[] ids)",
@@ -36,9 +36,10 @@ async function player(){
 }
 
 // init launchpad
-function launchpad() {
+function launchpad(config = {}) {
     let nft_5000 = generateArray(1, 5000);
     let project = {
+        roundID : '',
         token : '',         // nft token contract
         receipt : '',       // receipt fee address 
         merkleRoot : '',    // merkle root 
@@ -46,6 +47,7 @@ function launchpad() {
         price : '',         // amount to pay
         nft : nft_5000
     }
+    project = Object.assign(project, config);
     return project;
 }
 
@@ -72,6 +74,7 @@ async function setAward(type = 'ERC721') {
     let data = JSON.stringify(award);
     fs.writeFileSync(award_file, data);
 }
+
 // get award
 async function getAward(type = 'ERC721') {
     const json = JSON.parse(fs.readFileSync(`./scripts/${type}.award.json`, { encoding: 'utf8' }))
@@ -148,13 +151,17 @@ async function main () {
 
 
     // get config
-    // const configed = await getConfig();
-    // const deployed = await getDeployed(configed, rock);
-    // const mockDeployed = await getMockDeployed(configed, mocker);
+    const configed = await getConfig();
+    const deployed = await getDeployedMD(configed, exchange);
 
-    // for test
+    // TODO ----------- ----------- -----------
+    // for test 
     const type = "ERC721";
     const roundID = 1;
+    const index = 3;
+    sender = join;
+    
+    // TODO ----------- ----------- -----------
     
     let award = await awardGroup(type);
     const iface = new ethers.utils.Interface(typeABI[type]);
@@ -174,18 +181,48 @@ async function main () {
     }
     
     const leaves = calldatas.map(( v, k ) => {
-        return keccak256([roundID, k, v]);
-    });
+        return ethers.utils.solidityKeccak256(['uint256', 'uint256', 'bytes'], [roundID, k, v]);
+    })
 
     const tree = new MerkleTree(leaves, keccak256, { sort: true })
     const root = tree.getHexRoot()
 
-    const leaf = keccak256([roundID, 0, calldatas[0]]);
+    
+    const leaf = ethers.utils.solidityKeccak256(['uint256', 'uint256', 'bytes'], [roundID, index, calldatas[index]]);
     const proof = tree.getHexProof(leaf)
-    console.log(tree.verify(proof, leaf, root)) // true
-    console.log(root, calldatas[0], proof, calldatas.length);
 
+    console.log(tree.verify(proof, leaf, root)) // true
+    console.log(root, calldatas[index], proof, calldatas.length);
+
+    let project = launchpad({
+        roundID : roundID,
+        token : deployed.art721.address,                              // nft token contract
+        receipt : "0x0000000000000000000000000000000000000000",       // receipt fee address 
+        merkleRoot : root,                                            // merkle root 
+        payment : "0x0000000000000000000000000000000000000000",       // how to pay erc20 or eth
+        price : 10000,                                                // amount to pay
+    });
+
+    await deployed.merkleDistributor.create(project.roundID, project.token, project.merkleRoot, project.receipt, project.payment, project.price);
+
+    const override = {
+        value: ethers.utils.parseEther("0.3"),
+        gasLimit: 4100000
+    };
+
+    await deployed.merkleDistributor.connect(sender).claim(project.roundID, index, calldatas[index], proof, override);
+
+    const awardResult = await deployed.art721.balanceOf(award[index].to);
+    const receipt_balance =  await ethers.provider.getBalance(project.receipt);
+
+    console.log("claim result", [
+        award[index],
+        awardResult,
+        receipt_balance
+    ]);
 }
+
+
 
 main()
     .then(() => process.exit(0))
