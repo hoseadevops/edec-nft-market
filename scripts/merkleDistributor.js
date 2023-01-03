@@ -203,7 +203,7 @@ async function main () {
         price : 10000,                                                // amount to pay
     });
 
-    await deployed.merkleDistributor.create(project.roundID, project.token, project.merkleRoot, project.receipt, project.payment, project.price);
+    await deployed.merkleDistributor.launchpad(project.roundID, project.token, project.merkleRoot, project.receipt, project.payment, project.price);
 
     const override = {
         value: ethers.utils.parseEther("0.3"),

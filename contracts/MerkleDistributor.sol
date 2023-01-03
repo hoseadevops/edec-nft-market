@@ -23,12 +23,12 @@ contract MerkleDistributor is AccessControl {
     event Claimed(uint256 roundID, uint256 index);
 
     struct Project {
-        address token;
-        address payable receipt;
-        bytes32 merkleRoot;
-        BitMaps.BitMap bitmap;
-        address payment;
-        uint256 price;
+        address token;                  // nft token
+        address payable receipt;        // receive payment
+        bytes32 merkleRoot;             // merkle root
+        BitMaps.BitMap bitmap;          // distribute status for index
+        address payment;                // ETH or ERC20
+        uint256 price;                  // nft price
     }
 
     // roundID => Project
@@ -39,7 +39,8 @@ contract MerkleDistributor is AccessControl {
         _grantRole(CREATE_ROLE, creator);
     }
 
-    function create( uint256 _roundID, address _token, bytes32 _merkleRoot, address payable _receipt, address _payment, uint256 _price) public onlyRole(CREATE_ROLE) {
+    // Repeatable Setting
+    function launchpad( uint256 _roundID, address _token, bytes32 _merkleRoot, address payable _receipt, address _payment, uint256 _price) public onlyRole(CREATE_ROLE) {
         Project storage project = round[_roundID];
         project.merkleRoot = _merkleRoot;
         project.token = _token;
@@ -48,6 +49,7 @@ contract MerkleDistributor is AccessControl {
         project.price = _price;
     }
 
+    // anyone can pay
     function claim(uint256 roundID, uint256 index, bytes calldata calldataABI, bytes32[] calldata merkleProof) public payable {
         Project storage project = round[roundID];
         
@@ -64,7 +66,7 @@ contract MerkleDistributor is AccessControl {
         // Receipt token && Refund token
         if( project.payment == address(0) ) {
             require(msg.value >= project.price, 'You have to pay enough money.');
-            uint256 refund = msg.value -  project.price;
+            uint256 refund = msg.value - project.price;
             if(refund > 0) payable(msg.sender).transfer(refund);
             project.receipt.transfer(project.price);
         }else{
@@ -75,5 +77,23 @@ contract MerkleDistributor is AccessControl {
         // Mint token or transfer token
         project.token.functionCall(calldataABI);
         emit Claimed(roundID, index);
+    }
+    
+    // Returns the address of the token distributed by this contract.
+    function token(uint256 roundID) external view returns (address) {
+        Project storage project = round[roundID];
+        return project.token;
+    }
+
+    // Returns the merkle root of the merkle tree containing account balances available to claim.
+    function merkleRoot(uint256 roundID) external view returns (bytes32) {
+        Project storage project = round[roundID];
+        return project.merkleRoot;
+    }
+
+    // Returns true if the index has been marked claimed.
+    function isClaimed(uint256 roundID, uint256 index) external view returns (bool) {
+        Project storage project = round[roundID];
+        return project.bitmap.get(index);
     }
 }
