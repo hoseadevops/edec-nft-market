@@ -14,6 +14,6 @@ contract Merkle {
 
     function claim(string memory test,  bytes32[] calldata merkleProof) public view returns(bool) {
         bytes32 node = keccak256(abi.encodePacked(test));
-        return (!MerkleProof.verify(merkleProof, merkleRoot, node));
+        return MerkleProof.verify(merkleProof, merkleRoot, node);
     }
 }
