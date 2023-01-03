@@ -78,7 +78,10 @@ contract Launchpad is AccessControl {
     function claim(uint256 roundID, uint256 index, address to, uint256 nonce, bytes32[] calldata merkleProof) public payable {
         Project storage project = round[roundID];
         
-        require(nonce <= PAGE, "nonce must less than page");
+        require(nonce > 0 && nonce <= PAGE, "nonce must less than page");
+
+        uint256 awardNumber = project.idAmountMap.length();
+        require(awardNumber > 0, "sell out");
 
         // Verify claim
         if (project.bitmap.get(index)) revert AlreadyClaimed();
@@ -100,7 +103,7 @@ contract Launchpad is AccessControl {
             IERC20(project.payment).safeTransferFrom(msg.sender, project.receipt, project.price);
         }
 
-        // get ids
+        // get getAward
 
         // construct abi
         bytes calldata calldataABI = bytes("");
@@ -119,10 +122,37 @@ contract Launchpad is AccessControl {
         emit Claimed(roundID, index);
     }
 
-    function getIds() returns(uint256[] ids){
-        
+    function getAwards(uint256 roundID, uint256 nonce) public view returns(uint256[] ids, uint256[] amounts) {
+        Project storage project = round[roundID];
+
+        uint256 awardNumber = project.idAmountMap.length();
+        require(awardNumber > 0, "sell out");
+
+        for( uint256 i = 0; i < nonce; i++ ) {
+            uint256 id, uint256 amount = project.idAmountMap.at(random);
+            ids.push(id);
+            amounts.push(amount);
+        }
+
+        return (ids, amounts);   
     }
-    
+
+    function getRandom(uint256 count) public view returns(uint256) {
+
+    }
+
+    // unsafeRandom
+    // Between min and max:
+    // randomness % (max - min + 1) + min
+    // Between 1 and max:
+    // randomness % max + 1
+    // Where randomness is uint obtained from Chainlink VRF or from any other source
+    function unsafeRandom(uint min, uint max) public view returns (uint rand) {
+        rand = uint(keccak256(abi.encodePacked(block.timestamp, msg.sender, block.number))) % (max-min);
+        rand = rand + min;
+        return rand;
+    }
+
     // Returns the address of the token distributed by this round.
     function token(uint256 roundID) external view returns (address) {
         Project storage project = round[roundID];
