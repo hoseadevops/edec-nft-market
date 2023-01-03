@@ -79,19 +79,19 @@ contract MerkleDistributor is AccessControl {
         emit Claimed(roundID, index);
     }
     
-    // Returns the address of the token distributed by this contract.
+    // Returns the address of the token distributed by this round.
     function token(uint256 roundID) external view returns (address) {
         Project storage project = round[roundID];
         return project.token;
     }
 
-    // Returns the merkle root of the merkle tree containing account balances available to claim.
+    // Returns the merkle root of the merkle tree containing account balances available to claim by this round.
     function merkleRoot(uint256 roundID) external view returns (bytes32) {
         Project storage project = round[roundID];
         return project.merkleRoot;
     }
 
-    // Returns true if the index has been marked claimed.
+    // Returns true if the index has been marked claimed by this round.
     function isClaimed(uint256 roundID, uint256 index) external view returns (bool) {
         Project storage project = round[roundID];
         return project.bitmap.get(index);
