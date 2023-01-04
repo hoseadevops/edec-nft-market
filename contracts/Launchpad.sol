@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/utils/structs/BitMaps.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
-import { IERC721, IERC165, IDEPOSIT } from "./INFT.sol";
+import { IERC721, IERC1155, IDEPOSIT } from "./INFT.sol";
 
 error AlreadyClaimed();
 error InvalidProof();
@@ -41,7 +41,7 @@ contract Launchpad is AccessControl {
         address payment;                             // ETH or ERC20
         uint256 price;                               // nft price
         EnumerableMap.UintToUintMap idAmountMap;     // nft map( id => amount )
-        kinds kind;
+        Kinds kind;
     }
 
     // roundID => Project
@@ -106,36 +106,37 @@ contract Launchpad is AccessControl {
         // get getAward
 
         // construct abi
-        bytes calldata calldataABI = bytes("");
-        if( project.kind == Kinds.ERC721 )
-            calldataABI = abi.encodeWithSelector(
-                IERC721.batchMint.selector,
-                to,
-                ,
-                identifier
-            ); 
-        }
-        require(calldataABI, "calldata error.");
+        bytes memory calldataABI = bytes("");
+
+        // if( project.kind == Kinds.ERC721 )
+        //     calldataABI = abi.encodeWithSelector(
+        //         IERC721.batchMint.selector,
+        //         to,
+        //         ,
+        //         identifier
+        //     ); 
+        // }
+        // require(calldataABI, "calldata error.");
 
         // Mint token or transfer token
         project.token.functionCall(calldataABI);
         emit Claimed(roundID, index);
     }
 
-    function getAwards(uint256 roundID, uint256 nonce) public view returns(uint256[] ids, uint256[] amounts) {
-        Project storage project = round[roundID];
+    // function getAwards(uint256 roundID, uint256 nonce) public view returns(uint256[] ids, uint256[] amounts) {
+    //     Project storage project = round[roundID];
 
-        uint256 awardNumber = project.idAmountMap.length();
-        require(awardNumber > 0, "sell out");
+    //     uint256 awardNumber = project.idAmountMap.length();
+    //     require(awardNumber > 0, "sell out");
 
-        for( uint256 i = 0; i < nonce; i++ ) {
-            uint256 id, uint256 amount = project.idAmountMap.at(random);
-            ids.push(id);
-            amounts.push(amount);
-        }
+    //     for( uint256 i = 0; i < nonce; i++ ) {
+    //         uint256 id, uint256 amount = project.idAmountMap.at(random);
+    //         ids.push(id);
+    //         amounts.push(amount);
+    //     }
 
-        return (ids, amounts);   
-    }
+    //     return (ids, amounts);   
+    // }
 
     function getRandom(uint256 count) public view returns(uint256) {
 

@@ -6,10 +6,11 @@ async function main() {
     console.log("Deploying contracts with the account:", exchangeOwner.address, mocker.address);
     console.log("-----------------------------------------------------------\n");
     const mdObj = await deploy(exchangeOwner, "MerkleDistributor", "", exchangeOwner.address, exchangeOwner.address);
-    await deploy(mocker, "NFTDeposit", "", exchangeOwner.address, mdObj.address);
+    await deploy(mocker, "Deposit", "", exchangeOwner.address, mdObj.address);
 
     await deploy(mocker, "ERC721Mock", "art", "ERC721 Mock art", "ART721", "ipfs://", mdObj.address);
     await deploy(mocker, "ERC1155Mock", "art", "ipfs://", mdObj.address);
+    await deploy(mocker, "ERC20Mock", "FEE", "ERC20 Mock Fee", "FEE");
     
 }
 

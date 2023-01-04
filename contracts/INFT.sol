@@ -6,7 +6,7 @@ interface IERC721 {
     function batchMint(address to, uint256[] calldata ids) external;
 }
 
-interface IER1155 {
+interface IERC1155 {
     function batchMint(address to, uint256[] calldata ids, uint256[] calldata amounts, bytes calldata data) external;
 }
 
