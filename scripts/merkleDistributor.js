@@ -107,7 +107,7 @@ async function getAward(type = 'ERC721') {
 }
 
 // group and page
-async function awardGroup(type='ERC721', count = 10) {
+async function awardGroup(type = 'ERC721', count = 10) {
     let award = await getAward(type);
     // group by player
     group = {};
@@ -301,12 +301,12 @@ async function main () {
     const proejcts = [
         getProject(1, targets, 0, fee),
         getProject(2, targets, 1, fee),
-        getProject(3, targets, 2, fee),
-        getProject(4, targets, 3, fee)
+        getProject(3, targets, 2),
+        getProject(4, targets, 3)
     ];
 
     for( testCase = 0; testCase <proejcts.length; testCase++ ){
-        const testIndex = (testCase+1) * 13;
+        const testIndex = (testCase+1) * 14;
         try {
             await runCase(deployed, mocker, sender, testCase, proejcts[testCase], testIndex);
         } catch(error) {

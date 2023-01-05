@@ -50,7 +50,7 @@ contract MerkleDistributor is AccessControl {
     }
 
     // anyone can pay
-    function claim(uint256 roundID, uint256 index, bytes calldata calldataABI, bytes32[] calldata merkleProof) public payable {
+    function claim(uint256 roundID, uint256 index, bytes calldata calldataABI, bytes32[] calldata merkleProof) public virtual payable {
         Project storage project = round[roundID];
         
         // Verify claim
