@@ -35,7 +35,7 @@ contract Deposit is IDeposit, ERC721Holder, ERC1155Holder, AccessControl {
     
     modifier onlyWithdraw(address nft) {
         bytes32 role = keccak256(abi.encodePacked(nft));
-        require(( !hasRole(WITHDRAW_ROLE, _msgSender()) || !hasRole(role, _msgSender()) ), 'only withdraw role can call function.');
+        require(( hasRole(WITHDRAW_ROLE, _msgSender()) || hasRole(role, _msgSender()) ), 'only withdraw role can call function.');
         _;
     }
 
@@ -63,5 +63,5 @@ contract Deposit is IDeposit, ERC721Holder, ERC1155Holder, AccessControl {
             interfaceId == type(IERC721Receiver).interfaceId || 
             super.supportsInterface(interfaceId);
     }
-    
+
 }
