@@ -29,6 +29,8 @@ contract MerkleDistributor is AccessControl {
         BitMaps.BitMap bitmap;          // distribute status for index
         address payment;                // ETH or ERC20
         uint256 price;                  // nft price
+        uint256 startTime;              // 
+        uint256 endTime;                // 
     }
 
     // roundID => Project
@@ -40,19 +42,29 @@ contract MerkleDistributor is AccessControl {
     }
 
     // Repeatable Setting
-    function launchpad( uint256 _roundID, address _target, bytes32 _merkleRoot, address payable _receipt, address _payment, uint256 _price) public onlyRole(CREATE_ROLE) {
+    function launchpad( uint256 _roundID, address _target, bytes32 _merkleRoot, address payable _receipt, address _payment, uint256 _price, uint256 _startTime, uint256 _endTime) public onlyRole(CREATE_ROLE) {
+        
+        require(_endTime > block.timestamp, "End time is past");
+
         Project storage project = round[_roundID];
         project.merkleRoot = _merkleRoot;
         project.target = _target;
         project.receipt = _receipt;
         project.payment = _payment;
         project.price = _price;
+        project.startTime = _startTime;
+        project.endTime = _endTime;
     }
 
     // anyone can pay
-    function claim(uint256 roundID, uint256 index, bytes calldata calldataABI, bytes32[] calldata merkleProof) public virtual payable {
+    function claim(uint256 roundID, uint256 index, bytes calldata calldataABI, bytes32[] calldata merkleProof) public payable {
+        
         Project storage project = round[roundID];
         
+        // Verify time
+        require(project.startTime <= block.timestamp, "Hasn't started");
+        require(project.endTime >= block.timestamp, "It's all over");
+
         // Verify claim
         if (project.bitmap.get(index)) revert AlreadyClaimed();
 
@@ -69,20 +81,20 @@ contract MerkleDistributor is AccessControl {
             uint256 refund = msg.value - project.price;
             if(refund > 0) payable(msg.sender).transfer(refund);
             project.receipt.transfer(project.price);
-        }else{
+        } else {
             require(msg.value == 0, "You don't need to pay eth");
             IERC20(project.payment).safeTransferFrom(msg.sender, project.receipt, project.price);
         }
 
-        // Mint token or transfer token
+        // execute
         project.target.functionCall(calldataABI, "Call function fail.");
         emit Claimed(roundID, index);
     }
     
     // Returns project details by this round.
-    function target(uint256 roundID) external view returns (address,address, bytes32, address, uint256) {
+    function getProject(uint256 roundID) external view returns (address,address, bytes32, address, uint256, uint256, uint256) {
         Project storage project = round[roundID];
-        return (project.target, project.receipt, project.merkleRoot, project.payment, project.price);
+        return (project.target, project.receipt, project.merkleRoot, project.payment, project.price, project.startTime, project.endTime);
     }
 
     // Returns true if the index has been marked claimed by this round.

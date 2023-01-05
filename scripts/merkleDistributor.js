@@ -211,8 +211,8 @@ async function runCase(deployed, mocker, sender, testCase, project, testIndex = 
         length : calldatas.length,
     });
 
-    // launchpad
-    await deployed.merkleDistributor.launchpad(project.roundID, project.target.address, root, project.receipt, project.payment, project.price);
+    // launchpad（end at 2023-10-05）
+    await deployed.merkleDistributor.launchpad(project.roundID, project.target.address, root, project.receipt, project.payment, project.price, 0, 1696497563);
 
     // for pay eth 
     const override = {
