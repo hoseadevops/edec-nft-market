@@ -12,11 +12,11 @@ const ABI_721_mint = [
 ];
 
 const ABI_721_withdraw = [
-    "function batchWithdrawERC721(address nft, address to, uint256[] calldata ids)"
+    "function batchWithdrawERC721(address nft, address to, uint256[] tokenIds)"
 ];
 
 const ABI_1155_mint = [
-    "function batchMint(address to, uint256[] ids, uint256[] amounts, bytes data)",
+    "function batchMint(address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data)"
 ];
 
 const ABI_1155_withdraw = [
@@ -152,32 +152,39 @@ async function awardGroup(type='ERC721', count = 10) {
 }
 
 
-async function runCase(deployed, sender, testCase, project) {
+async function runCase(deployed, mocker, sender, testCase, project, testIndex = 4) {
     // paging awards
     const type     = typeERC[testCase];    // ERC721 、ERC1155
     let award = await awardGroup(type);
 
     //abi
     const iface = new ethers.utils.Interface(typeABI[testCase]);    
-    calldatas = [];
+  
+    let calldatas = [];
     for(i = 0; i < award.length; i++ ) {
+        let calldata = "";
         // "function batchMint(address to, uint256[] ids)"
         if( testCase == 0 ) {
             calldata = iface.encodeFunctionData("batchMint", [award[i].to, award[i].ids]);
         }
         // "function batchWithdrawERC721(address nft, address to, uint256[] calldata ids)"
         if( testCase == 1 ) {
-            calldata = iface.encodeFunctionData("batchWithdrawERC721", [project.token.address, award[i].to, award[i].ids]);
+            calldata = iface.encodeFunctionData("batchWithdrawERC721", [deployed.art721.address, award[i].to, award[i].ids]);   
         }
         // "function batchMint(address to, uint256[] ids, uint256[] amounts, bytes data)",
         if( testCase == 2 ) {
-            calldata = iface.encodeFunctionData("batchMint", [award[i].to, award[i].ids, award[i].amounts, ""]);
+            calldata = iface.encodeFunctionData("batchMint", [award[i].to, award[i].ids, award[i].amounts, '0x']);
         }
         "function batchWithdrawERC1155(address nft, address to, uint256[] calldata ids, uint256[] calldata amounts)"
         if( testCase == 3 ) {
-            calldata = iface.encodeFunctionData("batchWithdrawERC1155", [project.token.address, award[i].to, award[i].ids, award[i].amounts]);
+            calldata = iface.encodeFunctionData("batchWithdrawERC1155", [deployed.art1155.address, award[i].to, award[i].ids, award[i].amounts]);
         }
+
         calldatas.push(calldata);
+    }
+    // mock nft
+    if([1, 3].includes(testCase)) {
+        await fixtureNFT(deployed, mocker, award[testIndex].ids, award[testIndex].amounts, type);
     }
     
     // make tree with abi
@@ -189,13 +196,15 @@ async function runCase(deployed, sender, testCase, project) {
     // get tree root
     const root = tree.getHexRoot()
 
-    // for test 
-    testIndex = 4;
+    // for test
     const leaf = ethers.utils.solidityKeccak256(['uint256', 'uint256', 'bytes'], [project.roundID, testIndex, calldatas[testIndex]]);
     const proof = tree.getHexProof(leaf)
 
     console.log({
+        testCase,
+        testIndex,
         root, 
+        testaward : award[testIndex],
         calldata : calldatas[testIndex], 
         proof, 
         verify : tree.verify(proof, leaf, root),
@@ -210,20 +219,21 @@ async function runCase(deployed, sender, testCase, project) {
         value: ethers.utils.parseEther("0.3"),
         gasLimit: 4100000
     };
-    if(project.payment == '0x0000000000000000000000000000000000000000'){
+
+    if( project.payment == "0x0000000000000000000000000000000000000000") {
         await deployed.merkleDistributor.connect(sender).claim(project.roundID, testIndex, calldatas[testIndex], proof, override);
     }else{
         await deployed.merkleDistributor.connect(sender).claim(project.roundID, testIndex, calldatas[testIndex], proof);
     }
 
     // get result
-    const to_nft = await project.token.balanceOf(award[testIndex].to);
-    const receipt_eth_balance =  await ethers.provider.getBalance(project.receipt);
+    const nft_721 = await deployed.art721.balanceOf(award[testIndex].to);
+    const receipt_eth_balance = await ethers.provider.getBalance(project.receipt);
     const receipt_erc20_balance = await deployed.erc20.balanceOf(project.receipt);
 
     console.log("claim result", [
         award[testIndex],
-        to_nft,
+        nft_721,
         receipt_eth_balance,
         receipt_erc20_balance
     ]);
@@ -239,22 +249,27 @@ function getProject(roundID, tokens, testCase, payment=ZERO_ADDRESS){
     });
 }
 
-async function fixture(deployed, mocker, sender) {
-    // transfer fee to sender
-    // approve token to merkleDistributor
+// mint nfts to deposit
+async function fixtureNFT(deployed, mocker, ids, amounts, type) {
+    if(type == "ERC721"){
+        await deployed.art721.connect(mocker).batchMint(deployed.deposit.address, ids);
+    } else {
+        await deployed.art1155.connect(mocker).batchMint(deployed.deposit.address, ids, amounts, '0x');
+    }
+}
+
+// transfer fee to sender
+// sender approve token to merkleDistributor
+async function fixtureERC20(deployed, mocker, sender) {
     let eth_1_000_000_wei = ethers.utils.parseEther('1000000');
     await deployed.erc20.connect(mocker).transfer(sender.address, eth_1_000_000_wei);
     await deployed.erc20.connect(sender).approve(deployed.merkleDistributor.address, MAX_TOKEN);
-
-    // mint nfts
-    // transfer nft to deposit
 }
 
 async function mockAward() {
     // mock award to json
     await setAward("ERC721");
     await setAward("ERC1155");
-
 }
 
 async function main () {    
@@ -275,8 +290,10 @@ async function main () {
     const tokens = [ deployed.art721, deployed.deposit, deployed.art1155, deployed.deposit];
     const sender = join;
 
+    // mock award
     // await mockAward();
-    // await fixture(deployed, mocker, sender);
+
+    await fixtureERC20(deployed, mocker, sender);
 
     // for test 
     const proejcts = [
@@ -286,8 +303,14 @@ async function main () {
         getProject(4, tokens, 3)
     ];
 
-    for(testCase = 0; testCase <proejcts.length; testCase++){
-        await runCase(deployed, sender, testCase, proejcts[testCase]);
+    for( testCase = 0; testCase <proejcts.length; testCase++ ){
+        const testIndex = (testCase+1) * 9;
+        try {
+            await runCase(deployed, mocker, sender, testCase, proejcts[testCase], testIndex);
+        } catch(error) {
+            console.error(`Exception Debug : ${testCase} :`, error);
+        }
+        console.log("___________________________________________________________________________________________\n\n")
     }
 }
 

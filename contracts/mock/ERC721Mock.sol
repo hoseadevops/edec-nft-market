@@ -13,6 +13,7 @@ contract ERC721Mock is ERC721, AccessControl {
   constructor(string memory _name, string memory _symbol, string memory _baseUri, address _withdraw) ERC721(_name, _symbol) {
       _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
       _setupRole(WITHDRAW_ROLE, _withdraw);
+      _setupRole(WITHDRAW_ROLE, _msgSender());
       baseUri = _baseUri;
   }
 

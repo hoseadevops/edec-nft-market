@@ -14,6 +14,7 @@ contract ERC1155Mock is ERC1155, AccessControl {
     constructor(string memory _baseUri, address _withdraw) ERC1155(_baseUri) {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setupRole(WITHDRAW_ROLE, _withdraw);
+        _setupRole(WITHDRAW_ROLE,  msg.sender);
     }
 
     function setURI(string memory _baseUri) public onlyRole(DEFAULT_ADMIN_ROLE) {

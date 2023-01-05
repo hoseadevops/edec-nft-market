@@ -25,7 +25,7 @@ contract Deposit is IDeposit, ERC721Holder, ERC1155Holder, AccessControl {
 
     constructor(address root, address withdraw) {
         _setupRole(DEFAULT_ADMIN_ROLE, root);
-        _setupRole(WITHDRAW_ROLE, withdraw);
+        _grantRole(WITHDRAW_ROLE, withdraw);
     }
     
     function withdrawERC721(address nft, address to, uint256 tokenId) external onlyRole(WITHDRAW_ROLE) onlyEOA(to) {
