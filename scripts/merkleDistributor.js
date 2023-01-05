@@ -12,7 +12,7 @@ const ABI_721_mint = [
 ];
 
 const ABI_721_withdraw = [
-    "function batchWithdrawERC721(address nft, address to, uint256[] tokenIds)"
+    "function batchWithdrawERC721(address nft, address to, uint256[] ids)"
 ];
 
 const ABI_1155_mint = [
@@ -64,7 +64,7 @@ function launchpad(config = {}) {
     let nft_5000 = generateArray(1, 5000);
     let project = {
         roundID : '',
-        token : '',         // nft token contract
+        target : '',         // nft target contract
         receipt : '',       // receipt fee address 
         merkleRoot : '',    // merkle root 
         payment : '',       // how to pay erc20 or eth
@@ -151,7 +151,6 @@ async function awardGroup(type='ERC721', count = 10) {
     return award;
 }
 
-
 async function runCase(deployed, mocker, sender, testCase, project, testIndex = 4) {
     // paging awards
     const type     = typeERC[testCase];    // ERC721 、ERC1155
@@ -159,7 +158,8 @@ async function runCase(deployed, mocker, sender, testCase, project, testIndex = 
 
     //abi
     const iface = new ethers.utils.Interface(typeABI[testCase]);    
-  
+
+    // abi calldata
     let calldatas = [];
     for(i = 0; i < award.length; i++ ) {
         let calldata = "";
@@ -212,7 +212,7 @@ async function runCase(deployed, mocker, sender, testCase, project, testIndex = 
     });
 
     // launchpad
-    await deployed.merkleDistributor.launchpad(project.roundID, project.token.address, root, project.receipt, project.payment, project.price);
+    await deployed.merkleDistributor.launchpad(project.roundID, project.target.address, root, project.receipt, project.payment, project.price);
 
     // for pay eth 
     const override = {
@@ -239,11 +239,12 @@ async function runCase(deployed, mocker, sender, testCase, project, testIndex = 
     ]);
 }
 
-function getProject(roundID, tokens, testCase, payment=ZERO_ADDRESS){
+function getProject(roundID, targets, testCase, payment=ZERO_ADDRESS){
+    receipt = '0xdafea492d9c6733ae3d56b7ed1adb60692c98bc5';
     return launchpad({
         roundID,
-        token : tokens[testCase],   // nft token contract
-        receipt : ZERO_ADDRESS,     // receipt fee address 
+        target : targets[testCase],   // nft target contract
+        receipt,                    // receipt fee address 
         payment,                    // how to pay erc20 or eth
         price : 10000,              // amount to pay
     });
@@ -259,7 +260,7 @@ async function fixtureNFT(deployed, mocker, ids, amounts, type) {
 }
 
 // transfer fee to sender
-// sender approve token to merkleDistributor
+// sender approve target to merkleDistributor
 async function fixtureERC20(deployed, mocker, sender) {
     let eth_1_000_000_wei = ethers.utils.parseEther('1000000');
     await deployed.erc20.connect(mocker).transfer(sender.address, eth_1_000_000_wei);
@@ -287,7 +288,7 @@ async function main () {
     // config
     const configed = await getConfig();
     const deployed = await getDeployedMD(configed, exchange);
-    const tokens = [ deployed.art721, deployed.deposit, deployed.art1155, deployed.deposit];
+    const targets = [ deployed.art721, deployed.deposit, deployed.art1155, deployed.deposit];
     const sender = join;
 
     // mock award
@@ -296,15 +297,16 @@ async function main () {
     await fixtureERC20(deployed, mocker, sender);
 
     // for test 
+    const fee = deployed.erc20.address;
     const proejcts = [
-        getProject(1, tokens, 0),
-        getProject(2, tokens, 1),
-        getProject(3, tokens, 2),
-        getProject(4, tokens, 3)
+        getProject(1, targets, 0, fee),
+        getProject(2, targets, 1, fee),
+        getProject(3, targets, 2, fee),
+        getProject(4, targets, 3, fee)
     ];
 
     for( testCase = 0; testCase <proejcts.length; testCase++ ){
-        const testIndex = (testCase+1) * 9;
+        const testIndex = (testCase+1) * 13;
         try {
             await runCase(deployed, mocker, sender, testCase, proejcts[testCase], testIndex);
         } catch(error) {

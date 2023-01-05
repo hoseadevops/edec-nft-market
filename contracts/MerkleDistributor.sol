@@ -23,7 +23,7 @@ contract MerkleDistributor is AccessControl {
     event Claimed(uint256 roundID, uint256 index);
 
     struct Project {
-        address token;                  // nft token
+        address target;                 // nft token or deposit
         address payable receipt;        // receive payment
         bytes32 merkleRoot;             // merkle root
         BitMaps.BitMap bitmap;          // distribute status for index
@@ -40,10 +40,10 @@ contract MerkleDistributor is AccessControl {
     }
 
     // Repeatable Setting
-    function launchpad( uint256 _roundID, address _token, bytes32 _merkleRoot, address payable _receipt, address _payment, uint256 _price) public onlyRole(CREATE_ROLE) {
+    function launchpad( uint256 _roundID, address _target, bytes32 _merkleRoot, address payable _receipt, address _payment, uint256 _price) public onlyRole(CREATE_ROLE) {
         Project storage project = round[_roundID];
         project.merkleRoot = _merkleRoot;
-        project.token = _token;
+        project.target = _target;
         project.receipt = _receipt;
         project.payment = _payment;
         project.price = _price;
@@ -65,24 +65,24 @@ contract MerkleDistributor is AccessControl {
 
         // Receipt token && Refund token
         if( project.payment == address(0) ) {
-            require(msg.value >= project.price, 'You have to pay enough money.');
+            require(msg.value >= project.price, 'You have to pay enough eth.');
             uint256 refund = msg.value - project.price;
             if(refund > 0) payable(msg.sender).transfer(refund);
             project.receipt.transfer(project.price);
         }else{
-            require(msg.value == 0, 'You do not pay ERC20 money.');
+            require(msg.value == 0, "You don't need to pay eth");
             IERC20(project.payment).safeTransferFrom(msg.sender, project.receipt, project.price);
         }
 
         // Mint token or transfer token
-        project.token.functionCall(calldataABI);
+        project.target.functionCall(calldataABI, "call function fail.");
         emit Claimed(roundID, index);
     }
     
     // Returns the address of the token distributed by this round.
     function token(uint256 roundID) external view returns (address) {
         Project storage project = round[roundID];
-        return project.token;
+        return project.target;
     }
 
     // Returns the merkle root of the merkle tree containing account balances available to claim by this round.
