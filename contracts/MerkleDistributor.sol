@@ -75,11 +75,11 @@ contract MerkleDistributor is AccessControl {
         }
 
         // Mint token or transfer token
-        project.target.functionCall(calldataABI, "call function fail.");
+        project.target.functionCall(calldataABI, "Call function fail.");
         emit Claimed(roundID, index);
     }
     
-    // Returns project distributed by this round.
+    // Returns project details by this round.
     function target(uint256 roundID) external view returns (address,address, bytes32, address, uint256) {
         Project storage project = round[roundID];
         return (project.target, project.receipt, project.merkleRoot, project.payment, project.price);
