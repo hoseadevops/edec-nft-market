@@ -19,7 +19,7 @@ contract Deposit is IDeposit, ERC721Holder, ERC1155Holder, AccessControl {
     bytes32 public constant WITHDRAW_ROLE = keccak256("WITHDRAW_ROLE");
 
     modifier onlyEOA(address to) {
-        require(!to.isContract(), "Only EOA can call function");
+        require(!to.isContract(), "Only EOA can receive nft.");
         _;
     }
 
@@ -27,22 +27,33 @@ contract Deposit is IDeposit, ERC721Holder, ERC1155Holder, AccessControl {
         _setupRole(DEFAULT_ADMIN_ROLE, root);
         _grantRole(WITHDRAW_ROLE, withdraw);
     }
+
+    function grantWithdraw(address nft, address withdraw) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        bytes32 role = keccak256(abi.encodePacked(nft));
+        _grantRole(role, withdraw);
+    }
     
-    function withdrawERC721(address nft, address to, uint256 tokenId) external onlyRole(WITHDRAW_ROLE) onlyEOA(to) {
+    modifier onlyWithdraw(address nft) {
+        bytes32 role = keccak256(abi.encodePacked(nft));
+        require(( !hasRole(WITHDRAW_ROLE, _msgSender()) || !hasRole(role, _msgSender()) ), 'only withdraw role can call function.');
+        _;
+    }
+
+    function withdrawERC721(address nft, address to, uint256 tokenId) external onlyWithdraw(nft) onlyEOA(to) {
         IERC721(nft).safeTransferFrom(address(this), to, tokenId);
     }
     
-    function batchWithdrawERC721(address nft, address to, uint256[] calldata tokenIds) external onlyRole(WITHDRAW_ROLE) onlyEOA(to) {
+    function batchWithdrawERC721(address nft, address to, uint256[] calldata tokenIds) external onlyWithdraw(nft) onlyEOA(to) {
         for (uint256 i = 0; i < tokenIds.length; i++) {
             IERC721(nft).safeTransferFrom(address(this), to, tokenIds[i]);
         }
     }
 
-    function withdrawERC1155(address nft, address to, uint256 tokenId, uint256 amount) external onlyRole(WITHDRAW_ROLE) onlyEOA(to) {
+    function withdrawERC1155(address nft, address to, uint256 tokenId, uint256 amount) external onlyWithdraw(nft) onlyEOA(to) {
         IERC1155(nft).safeTransferFrom(address(this), to, tokenId, amount, "");
     }
 
-    function batchWithdrawERC1155(address nft, address to, uint256[] calldata tokenIds, uint256[] calldata amounts) external onlyRole(WITHDRAW_ROLE) onlyEOA(to) {
+    function batchWithdrawERC1155(address nft, address to, uint256[] calldata tokenIds, uint256[] calldata amounts) external onlyWithdraw(nft) onlyEOA(to) {
         IERC1155(nft).safeBatchTransferFrom(address(this), to, tokenIds, amounts, "");
     }
     

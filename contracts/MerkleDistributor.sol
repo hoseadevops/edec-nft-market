@@ -23,8 +23,8 @@ contract MerkleDistributor is AccessControl {
     event Claimed(uint256 roundID, uint256 index);
 
     struct Project {
-        address target;                 // nft token or deposit
-        address payable receipt;        // receive payment
+        address target;                 // nft or deposit
+        address payable receipt;        // receive payment 
         bytes32 merkleRoot;             // merkle root
         BitMaps.BitMap bitmap;          // distribute status for index
         address payment;                // ETH or ERC20
@@ -79,16 +79,10 @@ contract MerkleDistributor is AccessControl {
         emit Claimed(roundID, index);
     }
     
-    // Returns the address of the token distributed by this round.
-    function token(uint256 roundID) external view returns (address) {
+    // Returns project distributed by this round.
+    function target(uint256 roundID) external view returns (address,address, bytes32, address, uint256) {
         Project storage project = round[roundID];
-        return project.target;
-    }
-
-    // Returns the merkle root of the merkle tree containing account balances available to claim by this round.
-    function merkleRoot(uint256 roundID) external view returns (bytes32) {
-        Project storage project = round[roundID];
-        return project.merkleRoot;
+        return (project.target, project.receipt, project.merkleRoot, project.payment, project.price);
     }
 
     // Returns true if the index has been marked claimed by this round.
