@@ -23,14 +23,14 @@ contract MerkleDistributor is AccessControl {
     event Claimed(uint256 roundID, uint256 index);
 
     struct Project {
-        address target;                 // nft or deposit
+        address target;                 // nft or deposit or any contract
         address payable receipt;        // receive payment 
         bytes32 merkleRoot;             // merkle root
-        BitMaps.BitMap bitmap;          // distribute status for index
+        BitMaps.BitMap bitmap;          // distribute status for index(bit)
         address payment;                // ETH or ERC20
         uint256 price;                  // nft price
-        uint256 startTime;              // 
-        uint256 endTime;                // 
+        uint256 startTime;              // start
+        uint256 endTime;                // end
     }
 
     // roundID => Project
