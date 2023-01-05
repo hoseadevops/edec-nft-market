@@ -244,9 +244,9 @@ function getProject(roundID, targets, testCase, payment=ZERO_ADDRESS){
     return launchpad({
         roundID,
         target : targets[testCase],   // nft target contract
-        receipt,                    // receipt fee address 
-        payment,                    // how to pay erc20 or eth
-        price : 10000,              // amount to pay
+        receipt,                      // receipt fee address 
+        payment,                      // how to pay erc20 or eth
+        price : 10000,                // amount to pay
     });
 }
 
@@ -267,8 +267,8 @@ async function fixtureERC20(deployed, mocker, sender) {
     await deployed.erc20.connect(sender).approve(deployed.merkleDistributor.address, MAX_TOKEN);
 }
 
+// mock award to json
 async function mockAward() {
-    // mock award to json
     await setAward("ERC721");
     await setAward("ERC1155");
 }
