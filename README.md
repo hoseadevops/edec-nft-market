@@ -67,6 +67,8 @@ npx hardhat run scripts/market.js --network goerli
 
 # Launchpad
 
+yarn hardhat compile --force
+
 yarn env:localhost:md
 
 yarn test:md

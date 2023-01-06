@@ -252,10 +252,14 @@ function getProject(roundID, targets, testCase, payment=ZERO_ADDRESS){
 
 // mint nfts to deposit
 async function fixtureNFT(deployed, mocker, ids, amounts, type) {
-    if(type == "ERC721"){
-        await deployed.art721.connect(mocker).batchMint(deployed.deposit.address, ids);
-    } else {
-        await deployed.art1155.connect(mocker).batchMint(deployed.deposit.address, ids, amounts, '0x');
+    try{
+        if(type == "ERC721"){
+            await deployed.art721.connect(mocker).batchMint(deployed.deposit.address, ids);
+        } else {
+            await deployed.art1155.connect(mocker).batchMint(deployed.deposit.address, ids, amounts, '0x');
+        }
+    }catch( error ){
+        console.log("fixtureNFT: ", error);
     }
 }
 
