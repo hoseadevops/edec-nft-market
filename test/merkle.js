@@ -1,7 +1,12 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
+const { MerkleTree } = require('merkletreejs')
+const keccak256 = require('keccak256')
 
+const ABI_721_mint = [
+    "function batchMint(address to, uint256[] ids)"
+];
 
 describe("merkle", function () {
     
@@ -14,21 +19,39 @@ describe("merkle", function () {
         const merkle = await Merkle.deploy();
         await merkle.deployed();
 
-        const root = "0x11381fb36c881488e2da280d765e9ab67f628633101f1bea93bdefa8c9584c3b";
-        
-        const data = "0x6f35ef4ca71a4ee8a720aea738a6760254077ee70d99e8ce-a514-4cba-99ff-0e67123d4fed";
 
-        const merkleProof = [
-            '0x40B260087CC91E8F18058566B79C04A77BF1CA829FD4BF206D46B527F9432700', 
-            '0x82629F198AFBD91749E2BCEC863BC3B86FA83BA08B87BFFDA381222F002958AA', 
-            '0x0CA4B0ED8321489EFBC5540780192348F9BEF4AAF2E8DE92AB682380CC73613E', 
-            '0xD185D348FDF2E901502FA93F39A63507F532D6209F15A08080D3D6DA2447B99E'
-        ]
+        calldatas = [
+            "0x23b872dd000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb9226600000000000000000000000070997970c51812dc3a010c7d01b50e0d17dc79c80000000000000000000000000000000000000000000000000000000000000001",
+            "0x23b872dd000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb9226600000000000000000000000070997970c51812dc3a010c7d01b50e0d17dc79c80000000000000000000000000000000000000000000000000000000000000002",
+        ];
+
+        // make tree with abi
+        const leaves = calldatas.map(( v, k ) => {
+            // roundID, index, calldata
+            return ethers.utils.solidityKeccak256(['bytes'], [v]);
+        })
+        
+        const tree = new MerkleTree(leaves, keccak256, { sort: true })
+        // get tree root
+        const root = tree.getHexRoot()
+
+        const leaf = ethers.utils.solidityKeccak256(['bytes'], ["0x23b872dd000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb9226600000000000000000000000070997970c51812dc3a010c7d01b50e0d17dc79c80000000000000000000000000000000000000000000000000000000000000001"]);
+        const proof = tree.getHexProof(leaf)
+
+        console.log({
+            leaves,
+            root,
+            leaf,
+            proof
+        });
+
+        data = calldatas[0];
+
 
         await merkle.launchpad(root);
         const getRoot = await merkle.merkleRoot();
 
-        let result = await merkle.claim(data, merkleProof);
+        let result = await merkle.claim(data, proof);
 
 
         console.log({

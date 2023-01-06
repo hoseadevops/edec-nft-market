@@ -14,11 +14,12 @@ contract Merkle {
         merkleRoot = _merkleRoot;
     }
 
-    function claim(address target, uint256 roundID, uint256 index, bytes calldata calldataABI, bytes32[] calldata merkleProof) public {
+    function claim(bytes calldata data, bytes32[] calldata merkleProof) public view returns(bool, bytes32){
         // Verify the merkle proof.
-        bytes32 node = keccak256(abi.encodePacked(roundID, index, calldataABI));
-        require(MerkleProof.verify(merkleProof, merkleRoot, node), "Invalid Proof");
+        bytes32 node = keccak256(abi.encodePacked(data));
 
-        target.functionCall(calldataABI, "call function fail.");
+        return (MerkleProof.verify(merkleProof, merkleRoot, node) , node);
+
+        // target.functionCall(calldataABI, "call function fail.");
     }
 }
