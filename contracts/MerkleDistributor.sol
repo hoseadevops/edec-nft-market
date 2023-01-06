@@ -26,7 +26,7 @@ contract MerkleDistributor is AccessControl {
         address target;                 // nft or deposit or any contract
         address payable receipt;        // receive payment 
         bytes32 merkleRoot;             // merkle root
-        BitMaps.BitMap bitmap;          // distribute status for index(bit)
+        BitMaps.BitMap bitmap;          // distribute status of index
         address payment;                // ETH or ERC20
         uint256 price;                  // nft price
         uint256 startTime;              // start
@@ -62,8 +62,8 @@ contract MerkleDistributor is AccessControl {
         Project storage project = round[roundID];
         
         // Verify time
-        require(project.startTime <= block.timestamp, "Hasn't started");
-        require(project.endTime >= block.timestamp, "It's all over");
+        require(project.startTime <= block.timestamp, "Hasn't begined");
+        require(project.endTime >= block.timestamp, "It's over");
 
         // Verify claim
         if (project.bitmap.get(index)) revert AlreadyClaimed();
@@ -87,7 +87,7 @@ contract MerkleDistributor is AccessControl {
         }
 
         // execute
-        project.target.functionCall(calldataABI, "Call function fail.");
+        project.target.functionCall(calldataABI, "Call ABI failed.");
         emit Claimed(roundID, index);
     }
     
