@@ -59,8 +59,9 @@ contract Deposit is IDeposit, ERC721Holder, ERC1155Holder, AccessControl {
     
     function supportsInterface(bytes4 interfaceId) public view override(ERC1155Receiver, AccessControl) returns (bool) {
         return 
-            interfaceId == type(IDeposit).interfaceId || 
+            interfaceId == type(IDeposit).interfaceId ||
             interfaceId == type(IERC721Receiver).interfaceId || 
+            interfaceId == type(IERC1155Receiver).interfaceId || 
             super.supportsInterface(interfaceId);
     }
 

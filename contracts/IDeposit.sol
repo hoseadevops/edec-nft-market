@@ -4,6 +4,8 @@ pragma solidity ^0.8.7;
 
 interface IDeposit {
 
+    function grantWithdraw(address nft, address withdraw) external;
+    
     function withdrawERC721(address nft, address to, uint256 tokenId) external;
     
     function batchWithdrawERC721(address nft, address to, uint256[] calldata tokenIds) external;
