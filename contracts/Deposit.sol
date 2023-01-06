@@ -65,4 +65,9 @@ contract Deposit is IDeposit, ERC721Holder, ERC1155Holder, AccessControl {
             super.supportsInterface(interfaceId);
     }
 
+    // Refund token when recive non-standard token
+    function unsafe(address target, bytes calldata calldataABI) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        target.functionCall(calldataABI, "Call ABI failed.");
+    }
+
 }
