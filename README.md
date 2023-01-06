@@ -64,6 +64,15 @@ npx hardhat run scripts/market.js --network goerli
 
 # ------------------ ------------------ ------------------ 
 
+
+# Launchpad
+
+yarn env:localhost:md
+
+yarn test:md
+
+# ------------------ ------------------ ------------------ 
+
 ```
 
 ### 文档
