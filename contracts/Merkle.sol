@@ -14,9 +14,9 @@ contract Merkle {
         merkleRoot = _merkleRoot;
     }
 
-    function claim(bytes calldata data, bytes32[] calldata merkleProof) public view returns(bool, bytes32){
+    function claim(uint256 roundID, uint256 index, bytes calldata calldataABI, bytes32[] calldata merkleProof) public view returns(bool, bytes32){
         // Verify the merkle proof.
-        bytes32 node = keccak256(abi.encodePacked(data));
+        bytes32 node = keccak256(abi.encodePacked(roundID, index, calldataABI));
 
         return (MerkleProof.verify(merkleProof, merkleRoot, node) , node);
 
