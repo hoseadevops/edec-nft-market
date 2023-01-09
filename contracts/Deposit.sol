@@ -56,6 +56,14 @@ contract Deposit is IDeposit, ERC721Holder, ERC1155Holder, AccessControl {
     function batchWithdrawERC1155(address nft, address to, uint256[] calldata tokenIds, uint256[] calldata amounts) external onlyWithdraw(nft) onlyEOA(to) {
         IERC1155(nft).safeBatchTransferFrom(address(this), to, tokenIds, amounts, "");
     }
+
+    function multicall(address target, bytes[] calldata data) external onlyWithdraw(target) returns (bytes[] memory results) {
+        results = new bytes[](data.length);
+        for (uint256 i = 0; i < data.length; i++) {
+            results[i] = target.functionCall(data[i], "Call ABI failed.");
+        }
+        return results;
+    }
     
     function supportsInterface(bytes4 interfaceId) public view override(ERC1155Receiver, AccessControl) returns (bool) {
         return 

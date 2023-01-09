@@ -64,9 +64,9 @@ contract MerkleDistributor is AccessControl {
         project.startTime = _startTime;
         project.endTime = _endTime;
     }
-
+    
     // anyone can pay
-    function claim(uint256 roundID, uint256 index, bytes calldata calldataABI, bytes32[] calldata merkleProof) public payable {
+    function claim(uint256 roundID, uint256 index, uint256 num, bytes calldata calldataABI, bytes32[] calldata merkleProof) public payable {
         
         Project storage project = round[roundID];
         
@@ -78,21 +78,22 @@ contract MerkleDistributor is AccessControl {
         if (project.bitmap.get(index)) revert AlreadyClaimed();
 
         // Verify the merkle proof.
-        bytes32 node = keccak256(abi.encodePacked(roundID, index, calldataABI));
+        bytes32 node = keccak256(abi.encodePacked(roundID, index, num, calldataABI));
         if (!MerkleProof.verify(merkleProof, project.merkleRoot, node)) revert InvalidProof();
         
         // Mark it claimed
         project.bitmap.set(index);
 
         // Receipt token && Refund token
+        uint256 total = project.price * num;
         if( project.payment == address(0) ) {
-            require(msg.value >= project.price, 'You have to pay enough eth.');
-            uint256 refund = msg.value - project.price;
+            require(msg.value >= total, 'You have to pay enough eth.');
+            uint256 refund = msg.value - total;
             if(refund > 0) payable(msg.sender).transfer(refund);
-            project.receipt.transfer(project.price);
+            project.receipt.transfer(total);
         } else {
             require(msg.value == 0, "You don't need to pay eth");
-            IERC20(project.payment).safeTransferFrom(msg.sender, project.receipt, project.price);
+            IERC20(project.payment).safeTransferFrom(msg.sender, project.receipt, total);
         }
 
         // execute

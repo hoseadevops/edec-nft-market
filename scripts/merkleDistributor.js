@@ -11,6 +11,11 @@ const ABI_721_mint = [
     "function batchMint(address to, uint256[] ids)"
 ];
 
+const ABI_721 = [
+    "function mint(address _to, uint256 _tokenId)",
+    "function multicall(address target, bytes[] calldata data)"
+];
+
 const ABI_721_withdraw = [
     "function batchWithdrawERC721(address nft, address to, uint256[] ids)"
 ];
@@ -31,14 +36,16 @@ const typeABI = [
     ABI_721_mint,
     ABI_721_withdraw,
     ABI_1155_mint, 
-    ABI_1155_withdraw
+    ABI_1155_withdraw,
+    ABI_721
 ];
 
 const typeERC = [
     "ERC721",
     "ERC721",
     "ERC1155",
-    "ERC1155"
+    "ERC1155",
+    "ERC721",
 ];
 
 // include n and m
@@ -156,16 +163,17 @@ async function awardGroup(type = 'ERC721', count = 10) {
 }
 
 async function runCase(deployed, mocker, sender, testCase, project, testIndex = 4) {
+
     // paging awards
     const type     = typeERC[testCase];    // ERC721 、ERC1155
     let award = await awardGroup(type);
 
     //abi
-    const iface = new ethers.utils.Interface(typeABI[testCase]);    
+    const iface = new ethers.utils.Interface(typeABI[testCase]);
 
     // abi calldata
     let calldatas = [];
-    for(i = 0; i < award.length; i++ ) {
+    for(i = 0; i < 10; i++ ) {
         let calldata = "";
         // "function batchMint(address to, uint256[] ids)"
         if( testCase == 0 ) {
@@ -179,9 +187,18 @@ async function runCase(deployed, mocker, sender, testCase, project, testIndex = 
         if( testCase == 2 ) {
             calldata = iface.encodeFunctionData("batchMint", [award[i].to, award[i].ids, award[i].amounts, '0x']);
         }
-        "function batchWithdrawERC1155(address nft, address to, uint256[] calldata ids, uint256[] calldata amounts)"
+        // "function batchWithdrawERC1155(address nft, address to, uint256[] calldata ids, uint256[] calldata amounts)"
         if( testCase == 3 ) {
             calldata = iface.encodeFunctionData("batchWithdrawERC1155", [deployed.art1155.address, award[i].to, award[i].ids, award[i].amounts]);
+        }
+        if( testCase == 4 ) {
+            let subCalldatas = [];
+            for( j = 0; j < award[i].ids.length; j++ ) {
+                subCalldatas.push (
+                    iface.encodeFunctionData("mint", [award[i].to, award[i].ids[j]])
+                );
+            }
+            calldata = iface.encodeFunctionData("multicall", [deployed.art721.address, subCalldatas]);
         }
 
         calldatas.push(calldata);
@@ -190,18 +207,22 @@ async function runCase(deployed, mocker, sender, testCase, project, testIndex = 
     if([1, 3].includes(testCase)) {
         await fixtureNFT(deployed, mocker, award[testIndex].ids, award[testIndex].amounts, type);
     }
-    
+    if([4].includes(testCase)) {
+        const WITHDRAW_ROLE = await deployed.art721.connect(mocker).WITHDRAW_ROLE();
+        await deployed.art721.connect(mocker).grantRole(WITHDRAW_ROLE, deployed.deposit.address);
+    }
+
     // make tree with abi
     const leaves = calldatas.map(( v, k ) => {
         // roundID, index, calldata
-        return ethers.utils.solidityKeccak256(['uint256', 'uint256', 'bytes'], [project.roundID, k, v]);
+        return ethers.utils.solidityKeccak256(['uint256', 'uint256', 'uint256', 'bytes'], [project.roundID, k, award[k].ids.length, v]);
     })
     const tree = new MerkleTree(leaves, keccak256, { sort: true })
     // get tree root
     const root = tree.getHexRoot()
 
     // for test
-    const leaf = ethers.utils.solidityKeccak256(['uint256', 'uint256', 'bytes'], [project.roundID, testIndex, calldatas[testIndex]]);
+    const leaf = ethers.utils.solidityKeccak256(['uint256', 'uint256', 'uint256', 'bytes'], [project.roundID, testIndex, award[testIndex].ids.length, calldatas[testIndex]]);
     const proof = tree.getHexProof(leaf)
 
     console.log({
@@ -225,9 +246,9 @@ async function runCase(deployed, mocker, sender, testCase, project, testIndex = 
     };
 
     if( project.payment == "0x0000000000000000000000000000000000000000") {
-        await deployed.merkleDistributor.connect(sender).claim(project.roundID, testIndex, calldatas[testIndex], proof, override);
+        await deployed.merkleDistributor.connect(sender).claim(project.roundID, testIndex, award[testIndex].ids.length, calldatas[testIndex], proof, override);
     }else{
-        await deployed.merkleDistributor.connect(sender).claim(project.roundID, testIndex, calldatas[testIndex], proof);
+        await deployed.merkleDistributor.connect(sender).claim(project.roundID, testIndex, award[testIndex].ids.length, calldatas[testIndex], proof);
     }
 
     // get result
@@ -296,7 +317,7 @@ async function main () {
     // config
     const configed = await getConfig();
     const deployed = await getDeployedMD(configed, exchange);
-    const targets = [ deployed.art721, deployed.deposit, deployed.art1155, deployed.deposit];
+    const targets = [ deployed.art721, deployed.deposit, deployed.art1155, deployed.deposit,  deployed.deposit];
     const sender = join;
 
     // mock award
@@ -310,11 +331,12 @@ async function main () {
         getProject(1, targets, 0, fee),
         getProject(2, targets, 1, fee),
         getProject(3, targets, 2),
-        getProject(4, targets, 3)
+        getProject(4, targets, 3),
+        getProject(5, targets, 4),
     ];
 
     for( testCase = 0; testCase <proejcts.length; testCase++ ){
-        const testIndex = (testCase+1) + 14;
+        const testIndex = (testCase+1);
         try {
             await runCase(deployed, mocker, sender, testCase, proejcts[testCase], testIndex);
         } catch(error) {
