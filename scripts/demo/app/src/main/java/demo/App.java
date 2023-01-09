@@ -9,20 +9,23 @@ import org.web3j.abi.TypeEncoder;
 
 public class App {
 
-    public String hash() {
-        String calldata = "23b872dd000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb9226600000000000000000000000070997970c51812dc3a010c7d01b50e0d17dc79c80000000000000000000000000000000000000000000000000000000000000001";
-        String result = sha3 (
-            TypeEncoder.encodePacked(new Uint256(1)) +
-            TypeEncoder.encodePacked(new Uint256(0)) +
+    public String solidityKeccak256(Uint256 round, Uint256 index, String calldata) {
+        return sha3 (
+            TypeEncoder.encodePacked(round) +
+            TypeEncoder.encodePacked(index) +
             calldata
         );
-        return result;
     }
 
     public static void main(String[] args) {
-        // mock contract hash
+        // mock solidity keccak256(abi.encodePacked(roundID, index, calldataABI));
         String hashPackBytes = "0xab70f773b72296be008db775a3750e3c4948d7beed48993fe135e45e66dd7883";
-        System.out.println(hashPackBytes);
-        System.out.println(new App().hash());
+
+        String calldata = "23b872dd000000000000000000000000f39fd6e51aad88f6f4ce6ab8827279cfffb9226600000000000000000000000070997970c51812dc3a010c7d01b50e0d17dc79c80000000000000000000000000000000000000000000000000000000000000001";
+        Uint256 round = new Uint256(1);
+        Uint256 index = new Uint256(0);
+        
+        System.out.println(hashPackBytes); 
+        System.out.println(new App().solidityKeccak256(round, index, calldata)); 
     }
 }
