@@ -12,6 +12,9 @@ import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 error AlreadyClaimed();
 error InvalidProof();
 
+/**
+ * @author hoseadevops@gmail.com
+ */
 contract MerkleDistributor is AccessControl {
     
     using SafeERC20 for IERC20;
