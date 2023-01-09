@@ -57,7 +57,7 @@ contract Deposit is IDeposit, ERC721Holder, ERC1155Holder, AccessControl {
         IERC1155(nft).safeBatchTransferFrom(address(this), to, tokenIds, amounts, "");
     }
 
-    function multicall(address target, bytes[] calldata data) external onlyWithdraw(target) returns (bytes[] memory results) {
+    function multicall(address target, bytes[] calldata data) external onlyRole(WITHDRAW_ROLE) returns (bytes[] memory results) {
         results = new bytes[](data.length);
         for (uint256 i = 0; i < data.length; i++) {
             // TODO unsafe : Non-Detected contract return value
