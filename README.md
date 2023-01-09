@@ -73,6 +73,12 @@ yarn env:localhost:md
 
 yarn test:md
 
+# java hash test 
+
+cd ./scripts/demo
+
+./gradlew run
+
 # ------------------ ------------------ ------------------ 
 
 ```
