@@ -98,7 +98,7 @@ contract MerkleDistributor is AccessControl {
         }
 
         // execute
-        // TODO unsafe : Non-Detected contract return value
+        // TODO unsafe : Non-Detected contract call return value
         project.target.functionCall(calldataABI, "MerkleDistributor: Call ABI failed.");
         emit Claimed(roundID, msg.sender, index);
     }
