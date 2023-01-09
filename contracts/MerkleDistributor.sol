@@ -44,12 +44,18 @@ contract MerkleDistributor is AccessControl {
         _grantRole(CREATE_ROLE, creator);
     }
 
-    // Repeatable Setting
+    // Setting
     function launchpad( uint256 _roundID, address _target, bytes32 _merkleRoot, address payable _receipt, address _payment, uint256 _price, uint256 _startTime, uint256 _endTime) public onlyRole(CREATE_ROLE) {
         
         require(_endTime > block.timestamp, "End time is past");
+        require( _target != address(0) , "require target");
+        require( _receipt != address(0), "require receipt");
+        require( _price > 0 , "price > 0");
 
         Project storage project = round[_roundID];
+        
+        require(project.target == address(0) , "Do not repeat Settings");
+
         project.merkleRoot = _merkleRoot;
         project.target = _target;
         project.receipt = _receipt;
