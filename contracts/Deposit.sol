@@ -60,7 +60,7 @@ contract Deposit is IDeposit, ERC721Holder, ERC1155Holder, AccessControl {
     function multicall(address target, bytes[] calldata data) external onlyWithdraw(target) returns (bytes[] memory results) {
         results = new bytes[](data.length);
         for (uint256 i = 0; i < data.length; i++) {
-            // TODO unsafe : uncheck contract return value
+            // TODO unsafe : Non-Detected contract return value
             results[i] = target.functionCall(data[i], "Deposit: Call ABI failed.");
         }
         return results;
