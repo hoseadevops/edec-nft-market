@@ -23,7 +23,7 @@ contract MerkleDistributor is AccessControl {
     
     bytes32 public constant CREATE_ROLE = keccak256("CREATE_ROLE");
 
-    event Claimed(uint256 roundID, uint256 index);
+    event Claimed(uint256 roundID, address sender, uint256 index);
 
     struct Project {
         address target;                 // nft or deposit or any contract
@@ -97,7 +97,7 @@ contract MerkleDistributor is AccessControl {
 
         // execute
         project.target.functionCall(calldataABI, "Call ABI failed.");
-        emit Claimed(roundID, index);
+        emit Claimed(roundID, msg.sender, index);
     }
     
     // Returns project details by this round.
