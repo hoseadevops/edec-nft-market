@@ -64,7 +64,7 @@ contract MerkleDistributor is AccessControl {
         project.startTime = _startTime;
         project.endTime = _endTime;
     }
-    
+
     // anyone can pay
     function claim(uint256 roundID, uint256 index, uint256 num, bytes calldata calldataABI, bytes32[] calldata merkleProof) public payable {
         
@@ -97,7 +97,8 @@ contract MerkleDistributor is AccessControl {
         }
 
         // execute
-        project.target.functionCall(calldataABI, "Call ABI failed.");
+        // TODO unsafe : uncheck contract return value
+        project.target.functionCall(calldataABI, "MerkleDistributor: Call ABI failed.");
         emit Claimed(roundID, msg.sender, index);
     }
     
