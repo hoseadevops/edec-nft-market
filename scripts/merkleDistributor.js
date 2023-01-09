@@ -314,7 +314,7 @@ async function main () {
     ];
 
     for( testCase = 0; testCase <proejcts.length; testCase++ ){
-        const testIndex = (testCase+1) * 14;
+        const testIndex = (testCase+1) + 14;
         try {
             await runCase(deployed, mocker, sender, testCase, proejcts[testCase], testIndex);
         } catch(error) {
