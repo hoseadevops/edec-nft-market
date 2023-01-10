@@ -14,5 +14,5 @@ interface IDeposit {
 
     function batchWithdrawERC1155(address nft, address to, uint256[] calldata tokenIds, uint256[] calldata amounts) external;
 
-    function multicall(address target, bytes[] calldata data) external;
+    function multicall(address target, bytes[] calldata data) external returns (bytes[] memory results);
 }
