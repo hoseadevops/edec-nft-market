@@ -345,7 +345,7 @@ async function match721OrderOfferToERC20 (deployed, mockDeployed, accounts, acco
     sellOrder.extra = 0
     sellOrder.listingTime = parseInt(1638283031)
     sellOrder.expirationTime = 0
-    sellOrder.feeRecipient = ZERO_ADDRESS;
+    sellOrder.feeRecipient = ZERO_ADDRESS
     sellOrder.calldata = sellCalldata
     sellOrder.replacementPattern = encodeERC721OfferReplacementPatternSell
 
@@ -355,7 +355,7 @@ async function match721OrderOfferToERC20 (deployed, mockDeployed, accounts, acco
     buyOrder.side = 0
     buyOrder.maker = buyer.address
     buyOrder.taker = ZERO_ADDRESS
-    buyOrder.feeRecipient = FEE_RECIPIENT;
+    buyOrder.feeRecipient = FEE_RECIPIENT
 
     console.log({
         buyOrder, sellOrder
@@ -453,8 +453,10 @@ async function main () {
     const mockDeployed = await getMockDeployed(configed, mocker);
 
     // get user mock token 
-    // 
-    const accountsAssets = getMockTokenAsset(accounts, true);
+    // 1155 
+    // let accountsAssets = getMockTokenAsset(accounts, true);
+    // 721
+    accountsAssets = getMockTokenAsset(accounts);
 
     // submit orders
     // await match721Order(deployed, mockDeployed, accounts, accountsAssets);
@@ -465,9 +467,9 @@ async function main () {
 
     // await match721BatchOrder(deployed, mockDeployed, accounts, accountsAssets);
 
-    // await match721OrderOfferToERC20(deployed, mockDeployed, accounts, accountsAssets);
+    await match721OrderOfferToERC20(deployed, mockDeployed, accounts, accountsAssets);
 
-    await match1155OrderOfferToERC20(deployed, mockDeployed, accounts, accountsAssets);
+    // await match1155OrderOfferToERC20(deployed, mockDeployed, accounts, accountsAssets);
 }
 
 async function testGoerli () {
