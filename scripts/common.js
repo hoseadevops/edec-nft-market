@@ -1,12 +1,14 @@
 const { getConfig, getDeployed, getMockDeployed, generateArray } = require('./library.js');
 const helpers = require("@nomicfoundation/hardhat-network-helpers");
 
-const encodeERC721ReplacementPatternSell      = '0x000000000000000000000000000000000000000000000000000000000000000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000'
-const encodeERC721ReplacementPatternBuy       = '0x00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
-const encodeERC1155ReplacementPatternSell     = '0x000000000000000000000000000000000000000000000000000000000000000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
-const encodeERC1155ReplacementPatternBuy      = '0x00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
-const encodeERC721OfferReplacementPatternBuy  = '0x00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
-const encodeERC721OfferReplacementPatternSell = '0x'
+const encodeERC721ReplacementPatternSell       = '0x000000000000000000000000000000000000000000000000000000000000000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000'
+const encodeERC721ReplacementPatternBuy        = '0x00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
+const encodeERC1155ReplacementPatternSell      = '0x000000000000000000000000000000000000000000000000000000000000000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
+const encodeERC1155ReplacementPatternBuy       = '0x00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
+const encodeERC721OfferReplacementPatternBuy   = '0x00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
+const encodeERC721OfferReplacementPatternSell  = '0x'
+const encodeERC1155OfferReplacementPatternBuy  = '0x00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
+const encodeERC1155OfferReplacementPatternSell = '0x'
 
 const ZERO_ADDRESS = ethers.constants.AddressZero;
 const ZERO_HASH    = ethers.constants.HashZero;
@@ -43,6 +45,10 @@ function sellERC721ABI(seller, id, to) {
 
 function ERC721ABI(from, to, id) {
     return iface.encodeFunctionData("transferFrom", [from, to, id]);
+}
+
+function ERC1155ABI( from, to, id, value ) {
+    return iface.encodeFunctionData("safeTransferFrom", [from, to, id, value, '0x']);
 }
 
 function batchERC721Atomicized(transactions) {
@@ -480,9 +486,15 @@ async function makeMatchOrderGoerli(deployed, param, warp) {
  * @param {*} accounts 
  * @returns 
  */
-function getMockTokenAsset(accounts) {
+function getMockTokenAsset(accounts, ERC1155 = false) {
     asset = [];
-    let ids20 = generateArray(1, 20);
+    let ids20 = [];
+    if(!ERC1155){
+        ids20 = generateArray(1, 20);
+    }else{
+        ids20 = generateArray(1001, 1020);
+    }
+
     for(index = 0; index < accounts.length; index++) {
         ids20 = ids20.map(function (id) {
             id = (index*20 + id);
@@ -568,7 +580,7 @@ module.exports = {
     buyERC721ABI,
     batchERC721Atomicized,
     ERC721ABI,
-
+    ERC1155ABI,
     makeOrder,
     signature,
     getHashOrder,
@@ -585,5 +597,7 @@ module.exports = {
     makeMatchOrderGoerli,
     FEE_RECIPIENT,
     encodeERC721OfferReplacementPatternBuy,
-    encodeERC721OfferReplacementPatternSell
+    encodeERC721OfferReplacementPatternSell,
+    encodeERC1155OfferReplacementPatternBuy,
+    encodeERC1155OfferReplacementPatternSell
  }

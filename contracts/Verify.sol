@@ -163,4 +163,21 @@ contract Verify {
         return rawBytes;
     }
 
+    function encodeERC1155OfferReplacementPatternBuy() public pure returns (bytes memory) {
+        bytes memory rawBytes = abi.encodeWithSelector(
+            IERC1155.safeTransferFrom.selector,
+            0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+            NULL_ADDRESS,
+            0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
+            0,
+            EMPTY_BYTES
+        );
+        rawBytes[0] = 0;
+        rawBytes[1] = 0;
+        rawBytes[2] = 0;
+        rawBytes[3] = 0;
+        rawBytes[163] = 0;
+
+        return rawBytes;
+    }
 }

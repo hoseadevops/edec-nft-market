@@ -53,13 +53,15 @@ describe("Verify", function () {
 
         const encodeERC1155ReplacementPatternSell = await verify.encodeERC1155ReplacementPatternSell();
         const encodeERC1155ReplacementPatternBuy = await verify.encodeERC1155ReplacementPatternBuy();
-    
+        const encodeERC1155OfferReplacementPatternBuy = await verify.encodeERC1155OfferReplacementPatternBuy();
+
         console.log({
             encodeERC721ReplacementPatternSell,
             encodeERC721ReplacementPatternBuy,
             encodeERC1155ReplacementPatternSell,
             encodeERC1155ReplacementPatternBuy,
-            encodeERC721OfferReplacementPatternBuy
+            encodeERC721OfferReplacementPatternBuy,
+            encodeERC1155OfferReplacementPatternBuy
         });
         
         // 712 + 1272

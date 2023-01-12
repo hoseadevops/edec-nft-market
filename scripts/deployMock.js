@@ -13,13 +13,13 @@ async function main() {
     await deploy(mocker, "ERC20Mock", "BTC", "ERC20 Mock bitcoin", "BTC");
     await deploy(mocker, "ERC20Mock", "USDT", "ERC20 Mock USDT", "USDT");
 
-    await deploy(mocker, "ERC721Mock", "art", "ERC721 Mock art", "ART721", "ipfs://");
-    await deploy(mocker, "ERC721Mock", "vr", "ERC721 Mock vr", "VR721", "ipfs://");
-    await deploy(mocker, "ERC721Mock", "game", "ERC721 Mock game", "GAME721", "ipfs://");
+    await deploy(mocker, "ERC721Mock", "art", "ERC721 Mock art", "ART721", "ipfs://", mocker.address);
+    await deploy(mocker, "ERC721Mock", "vr", "ERC721 Mock vr", "VR721", "ipfs://", mocker.address);
+    await deploy(mocker, "ERC721Mock", "game", "ERC721 Mock game", "GAME721", "ipfs://", mocker.address);
 
-    await deploy(mocker, "ERC1155Mock", "art", "ipfs://");
-    await deploy(mocker, "ERC1155Mock", "vr", "ipfs://");
-    await deploy(mocker, "ERC1155Mock", "game", "ipfs://");
+    await deploy(mocker, "ERC1155Mock", "art", "ipfs://", mocker.address);
+    await deploy(mocker, "ERC1155Mock", "vr", "ipfs://", mocker.address);
+    await deploy(mocker, "ERC1155Mock", "game", "ipfs://", mocker.address);
 }
   
 main()
